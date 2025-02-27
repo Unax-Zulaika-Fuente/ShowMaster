@@ -1,0 +1,185 @@
+/* Estilos generales */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+  
+  /* Barra superior */
+  .menu-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 1000;
+  }
+  .menu-bar .menu-item {
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .menu-bar .menu-item:hover {
+    text-decoration: underline;
+  }
+  
+  /* Contenedor principal */
+  .container {
+    padding: 20px;
+    margin-top: 50px; /* Espacio para la barra superior */
+    min-height: calc(100% - 50px);
+  }
+  
+  /* Columnas */
+  #columnsContainer {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  #mainColumn, #secondaryColumn {
+    flex: 1;
+    background: #fff;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+  }
+  #mainColumn {
+    border-right: 1px solid #ccc;
+  }
+  
+  /* Listas de archivos */
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+    overflow-y: auto;
+    resize: both;
+    border: 1px solid #ccc;
+  }
+  li {
+    padding: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+    cursor: pointer;
+    background: #fafafa;
+  }
+  
+  /* Contenedor de controles */
+  .playback-controls {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  /* Fila superior: barra de tiempo */
+  .time-container {
+    width: 100%;
+  }
+  .slider-container {
+    display: flex;
+    align-items: center;
+  }
+  .slider-container input[type="range"] {
+    flex: 1;
+  }
+  .slider-container span {
+    margin-left: 10px;
+    white-space: nowrap;
+  }
+  
+  /* Fila inferior: botones y volumen */
+  .button-volume-row {
+    display: flex;
+    justify-content: center; /* Centra el contenido */
+    align-items: center;
+    position: relative;      /* Para posicionar elementos absolutos dentro */
+    width: 100%;
+  }
+  
+  /* Botones de interacción */
+  .control-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  .control-buttons button {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  .control-buttons button:hover {
+    color: #007bff;
+  }
+  
+  /* Estilo de volumen similar a YouTube: el slider aparece a la izquierda del icono */
+  .volume-container {
+    position: absolute;
+    left: 0;
+    /* Opcional: agrega algo de margen si lo deseas */
+    margin-left: 10px;
+  }
+  
+  .volume-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .volume-icon {
+    font-size: 1.5rem;
+    color: #333;
+  }
+  .volume-slider {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    width: 0;
+    opacity: 0;
+    transition: width 0.3s ease, opacity 0.3s ease;
+    background: #eee;
+    border: 1px solid #ccc;
+    padding: 2px;
+    border-radius: 3px;
+  }
+  .volume-control:hover .volume-slider {
+    width: 100px;
+    opacity: 1;
+  }
+  
+  /* Volumen slider inputs para personalizar apariencia */
+  input[type=range] {
+    -webkit-appearance: none;
+    background: #ddd;
+    height: 4px;
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+    border: none;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+    border: none;
+  }
+  

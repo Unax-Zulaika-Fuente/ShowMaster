@@ -53,6 +53,14 @@ Esto generará un archivo instalador en la carpeta dist/.
 3. Reproducir el contenido en una pantalla secundaria con total control.
 4. Guardar proyectos para usarlos en futuras funciones.
 
+⚠ **IMPORTANTE**:
+
+Cuando guardas un proyecto, **ShowMaster almacena las rutas de los archivos de audio y video, pero no los copia.**  
+
+**Si mueves o eliminas los archivos después de guardar el proyecto, ShowMaster no podrá encontrarlos y no se cargarán correctamente.**
+
+Para evitar problemas, mantén los archivos en su ubicación original o vuelve a cargarlos en la aplicación si cambian de sitio.
+
 ---
 
 ## 📝 Licencia

@@ -1,0 +1,13 @@
+# Ignorar dependencias de Node.js
+node_modules/
+package-lock.json
+
+# Ignorar archivos de compilación
+dist/
+build/
+
+# Ignorar configuraciones del sistema y del editor
+.DS_Store
+Thumbs.db
+*.log
+*.env
