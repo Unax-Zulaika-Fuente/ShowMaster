@@ -1,20 +1,20 @@
 const { ipcRenderer } = require('electron');
 
-// Bibliotecas separadas para cada área
-let primaryLibrary = [];
-let secondaryLibrary = [];
-let currentIndex = 0;
-let isPlaying = false;  // Estado para reproducción principal
-let videoStarted = false; // Indica si el video ya se inició alguna vez
-let currentPlayingIndex = null; // Almacena el índice del video que se está reproduciendo
-let videoFinished = false; // Variable para indicar si el video/sonido ha finalizado
+let primaryLibrary = [];         // Archivos de la secuencia principal
+let secondaryLibrary = [];       // Archivos de la secuencia secundaria
+let currentIndex = 0;            // Indice del archivo activo en la secuencia principal
+let isPlaying = false;           // Estado de reproducción principal (play/pausa)
+let videoStarted = false;        // Indica si el video ya inicio alguna vez
+let currentPlayingIndex = null;  // Indice del archivo que se esta reproduciendo actualmente
+let videoFinished = false;       // Flag que indica si el video/sonido ha finalizado
 
-// Variables para detectar doble clic en los botones "inicio" y "siguiente"
-const DOUBLE_CLICK_DELAY = 250; // ms
+//#region 🔁 Variables para Doble Clic
+const DOUBLE_CLICK_DELAY = 250; // ms para detectar doble clic
 let startButtonClickTimeout = null;
 let nextButtonClickTimeout = null;
+//#endregion
 
-// --- Elementos de la UI ---
+//#region 🎛️ Elementos de la Interfaz (DOM)
 const sequenceList = document.getElementById('sequenceList');
 const secondaryMediaList = document.getElementById('secondaryMediaList');
 
@@ -24,11 +24,12 @@ const saveProjectBtn = document.getElementById('saveProject');
 const addFilesBtn = document.getElementById('addFiles');
 const removeSelectedBtn = document.getElementById('removeSelected');
 
-// En lugar de play y pause separados, usaremos un único botón
+// Botones de reproduccion
 const togglePlayBtn = document.getElementById('togglePlay');
 const nextBtn = document.getElementById('next');
 const finalizeBtn = document.getElementById('finalize');
 
+// Sliders de tiempo y display
 const timeSlider = document.getElementById('timeSlider');
 const timeDisplay = document.getElementById('timeDisplay');
 const secondaryTimeSlider = document.getElementById('secondaryTimeSlider');
@@ -38,75 +39,83 @@ const secondaryTimeDisplay = document.getElementById('secondaryTimeDisplay');
 const mainVolumeSlider = document.getElementById('mainVolumeSlider');
 const secondaryVolumeSlider = document.getElementById('secondaryVolumeSlider');
 
-// Para la carga de archivos secundarios
+// Botones y variables para la secuencia secundaria
 const addFilesSecondaryBtn = document.getElementById('addFilesSecondary');
 const removeSecondarySelectedBtn = document.getElementById('removeSecondarySelected');
 const playSecondaryBtn = document.getElementById('playSecondary');
 const stopSecondaryBtn = document.getElementById('stopSecondary');
 
-// Variable para almacenar el archivo seleccionado para la secundaria
+// Archivo seleccionado en la secuencia secundaria
 let selectedSecondaryFile = null;
 let secondaryAudio = null;
+//#endregion
 
-// Función para formatear segundos a mm:ss (o hh:mm:ss)
+console.log('RENDERER.js');
+
+//#region ⏲️ Funcion de Formateo de Tiempo
+/**
+ * Convierte segundos en formato hh:mm:ss o mm:ss.
+ * @param {number} seconds - Segundos totales.
+ * @returns {string} - Tiempo formateado.
+ */
 function formatTime(seconds) {
   seconds = Math.floor(seconds);
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
+  
   if (h > 0) {
     return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   } else {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 }
+//#endregion
 
-// --- Renderizado de la Secuencia Principal (Izquierda) con reordenación ---
+//#region 📋 Renderizado de la Secuencia Principal
+/**
+ * Muestra la lista de archivos en la secuencia principal, con posibilidad de arrastrar/soltar para reordenar.
+ */
 function renderMainSequence() {
   sequenceList.innerHTML = '';
   primaryLibrary.forEach((item, index) => {
     const li = document.createElement('li');
     li.textContent = item.split(/(\\|\/)/g).pop();
     li.dataset.index = index;
-    li.draggable = true; // Hacemos que el elemento sea draggable
+    li.draggable = true;
 
-    // Resalta el elemento actual
+    // Resaltar el elemento si es el actual
     li.style.backgroundColor = (index === currentIndex) ? '#99ff99' : '';
 
-    // Al iniciar el drag se guarda el índice del elemento
+    // Drag & Drop
     li.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', index);
-      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.effectAllowed = 'move';
     });
-
-    // Permite que el elemento reciba drops
     li.addEventListener('dragover', (e) => {
       e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
+      e.dataTransfer.dropEffect = 'move';
     });
-
-    // Al soltar, se reordena la lista
     li.addEventListener('drop', (e) => {
       e.preventDefault();
       const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-      const targetIndex = index;
-      if (draggedIndex === targetIndex) return;
+      if (draggedIndex === index) return;
       
       const [movedItem] = primaryLibrary.splice(draggedIndex, 1);
-      primaryLibrary.splice(targetIndex, 0, movedItem);
-      
+      primaryLibrary.splice(index, 0, movedItem);
+
+      // Ajustar el currentIndex si es necesario
       if (currentIndex === draggedIndex) {
-        currentIndex = targetIndex;
-      } else if (draggedIndex < currentIndex && targetIndex >= currentIndex) {
+        currentIndex = index;
+      } else if (draggedIndex < currentIndex && index >= currentIndex) {
         currentIndex--;
-      } else if (draggedIndex > currentIndex && targetIndex <= currentIndex) {
+      } else if (draggedIndex > currentIndex && index <= currentIndex) {
         currentIndex++;
       }
-      
       updateLibraryUI();
     });
 
-    // Seleccionar elemento al hacer click
+    // Al hacer clic, seleccionar este archivo
     li.addEventListener('click', () => {
       currentIndex = index;
       renderMainSequence();
@@ -115,8 +124,12 @@ function renderMainSequence() {
     sequenceList.appendChild(li);
   });
 }
+//#endregion
 
-// --- Renderizado de la Media para Secundaria (Derecha) ---
+//#region 📋 Renderizado de la Secuencia Secundaria
+/**
+ * Muestra la lista de archivos en la secuencia secundaria (efectos de sonido).
+ */
 function renderSecondaryMedia() {
   secondaryMediaList.innerHTML = '';
   secondaryLibrary.forEach((item, index) => {
@@ -125,25 +138,33 @@ function renderSecondaryMedia() {
     li.dataset.filePath = item;
     li.dataset.index = index;
     li.style.backgroundColor = (selectedSecondaryFile === item) ? '#99ff99' : '';
+
+    // Al hacer clic, marcar este archivo como seleccionado
     li.addEventListener('click', () => {
       selectedSecondaryFile = item;
       const allItems = secondaryMediaList.querySelectorAll('li');
       allItems.forEach(el => el.style.backgroundColor = '');
       li.style.backgroundColor = '#99ff99';
     });
+    
     secondaryMediaList.appendChild(li);
   });
 }
+//#endregion
 
-// Actualiza ambas listas
+//#region 🔄 Actualización de la UI
+/**
+ * Actualiza la lista de la secuencia principal y secundaria.
+ */
 function updateLibraryUI() {
   renderMainSequence();
   renderSecondaryMedia();
 }
+//#endregion
 
-// --- Eventos para la Secuencia Principal ---
+//#region 📂 Manejo de Proyectos
 newProjectBtn.addEventListener('click', async () => {
-  // Invoca el diálogo de confirmación
+  // Mostrar cuadro de confirmacion para nuevo proyecto
   const response = await ipcRenderer.invoke('confirm-new-project');
   if (response === 0) {
     // Guardar y Nuevo
@@ -154,31 +175,32 @@ newProjectBtn.addEventListener('click', async () => {
     const result = await ipcRenderer.invoke('save-sequence', projectData);
     if(result.success){
       alert('Proyecto guardado. Se creará un nuevo proyecto.');
-      primaryLibrary = [];
-      secondaryLibrary = [];
-      currentIndex = 0;
-      selectedSecondaryFile = null;
-      isPlaying = false;
-      togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-      updateLibraryUI();
+      resetProject();
     } else {
       alert('Error al guardar el proyecto.');
     }
   } else if (response === 1) {
     // Nuevo sin guardar
-    primaryLibrary = [];
-    secondaryLibrary = [];
-    currentIndex = 0;
-    selectedSecondaryFile = null;
-    isPlaying = false;
-    togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    updateLibraryUI();
-  } 
-  // Si response === 2, Cancelar: no se hace nada.
+    resetProject();
+  }
+  // response === 2 => Cancelar, no se hace nada
 });
 
+/**
+ * Restablece la lista de archivos (proyecto en blanco).
+ */
+function resetProject() {
+  primaryLibrary = [];
+  secondaryLibrary = [];
+  currentIndex = 0;
+  selectedSecondaryFile = null;
+  isPlaying = false;
+  togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+  updateLibraryUI();
+}
 
 loadProjectBtn.addEventListener('click', async () => {
+  // Cargar proyecto desde un archivo JSON
   const loadedProject = await ipcRenderer.invoke('load-sequence');
   if (loadedProject && typeof loadedProject === 'object') {
     primaryLibrary = loadedProject.primaryLibrary || [];
@@ -191,17 +213,18 @@ loadProjectBtn.addEventListener('click', async () => {
 });
 
 saveProjectBtn.addEventListener('click', async () => {
-  const projectData = {
-    primaryLibrary: primaryLibrary,
-    secondaryLibrary: secondaryLibrary
-  };
+  // Guardar el proyecto actual
+  const projectData = { primaryLibrary, secondaryLibrary };
   const result = await ipcRenderer.invoke('save-sequence', projectData);
   if(result.success){
     alert('Proyecto guardado exitosamente.');
   }
 });
+//#endregion
 
+//#region 📂 Manejo de Archivos en la Secuencia Principal
 addFilesBtn.addEventListener('click', async () => {
+  // Abre el dialogo para seleccionar archivos
   const files = await ipcRenderer.invoke('open-file-dialog');
   if(files && files.length > 0){
     primaryLibrary = primaryLibrary.concat(files);
@@ -210,6 +233,7 @@ addFilesBtn.addEventListener('click', async () => {
 });
 
 removeSelectedBtn.addEventListener('click', () => {
+  // Elimina el archivo resaltado (seleccionado) de la lista principal
   const lis = document.querySelectorAll('#sequenceList li');
   lis.forEach(li => {
     if(li.style.backgroundColor === 'rgb(153, 255, 153)'){
@@ -220,42 +244,45 @@ removeSelectedBtn.addEventListener('click', () => {
   currentIndex = 0;
   updateLibraryUI();
 });
+//#endregion
 
+//#region 🎬 Control de Reproduccion Principal
+// Botón "Inicio/Anterior" (con doble clic)
 const startOrPrevBtn = document.getElementById('startOrPrev');
-
-// Evento para el botón "Inicio/Anterior"
 startOrPrevBtn.addEventListener('click', () => {
   if (startButtonClickTimeout) {
-    // Doble pulsación: ir al video anterior
+    // Doble pulsacion: ir al video anterior
     clearTimeout(startButtonClickTimeout);
     startButtonClickTimeout = null;
     if (currentIndex > 0) {
       currentIndex--;
+      console.log('Línea A: Se ha cargado renderer.js por completo');
+      console.log('Línea B: Valor de primaryLibrary:', primaryLibrary);
+
+      console.log('Reproduciendo archivo:', primaryLibrary[currentIndex]);
+
       ipcRenderer.send('play-video', primaryLibrary[currentIndex]);
       isPlaying = true;
       videoStarted = true;
       currentPlayingIndex = currentIndex;
-      // Reiniciamos el flag de finalización
       videoFinished = false;
       togglePlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
       renderMainSequence();
     }
   } else {
+    // Primera pulsacion: volver al inicio del video
     startButtonClickTimeout = setTimeout(() => {
-      // Acción simple: reiniciar al inicio del video actual
       ipcRenderer.send('seek-video', 0);
-      // Aseguramos que el video ya no esté marcado como finalizado
       videoFinished = false;
       startButtonClickTimeout = null;
     }, DOUBLE_CLICK_DELAY);
   }
 });
 
-// Evento combinado de toggle play/pause para la reproducción principal
+// Boton combinado de play/pause
 togglePlayBtn.addEventListener('click', () => {
-  // Si se ha seleccionado un video distinto al que se está reproduciendo...
+  // Si se selecciona un archivo distinto al que se reproduce, iniciar ese nuevo archivo
   if (currentPlayingIndex !== currentIndex) {
-    // Reproducir el nuevo video y actualizar el estado
     if (primaryLibrary.length > 0 && currentIndex < primaryLibrary.length) {
       ipcRenderer.send('play-video', primaryLibrary[currentIndex]);
       currentPlayingIndex = currentIndex;
@@ -264,28 +291,26 @@ togglePlayBtn.addEventListener('click', () => {
       togglePlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
       renderMainSequence();
     }
-    return; // Salir del handler
+    return;
   }
-  
-  // Si el video actual ya es el seleccionado:
+
+  // Si el archivo actual ya es el que esta reproduciendo, alternar entre pausa y reanudar
   if (!isPlaying) {
-    // Reanudar la reproducción
     ipcRenderer.send('resume-video');
     isPlaying = true;
     togglePlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
   } else {
-    // Pausar la reproducción
     ipcRenderer.send('pause-video');
     isPlaying = false;
     togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
   }
 });
 
-// Botón "Siguiente"
+// Boton "Siguiente" (con doble clic)
 nextBtn.addEventListener('click', () => {
-  // Si el video ya terminó, con un solo clic se pasa al siguiente
   if (videoFinished) {
-    videoFinished = false; // Reiniciamos el estado
+    // Si el video ya terminó, con un clic se pasa al siguiente
+    videoFinished = false;
     if (primaryLibrary.length > 0 && currentIndex < primaryLibrary.length - 1) {
       currentIndex++;
       ipcRenderer.send('play-video', primaryLibrary[currentIndex]);
@@ -297,10 +322,10 @@ nextBtn.addEventListener('click', () => {
     } else {
       alert('No hay más elementos en la secuencia.');
     }
-    return; // Salir sin esperar doble clic
+    return;
   }
 
-  // Si el video no ha finalizado, se utiliza el comportamiento de doble pulsación:
+  // Si no ha finalizado, se detecta el doble clic
   if (nextButtonClickTimeout) {
     clearTimeout(nextButtonClickTimeout);
     nextButtonClickTimeout = null;
@@ -315,7 +340,6 @@ nextBtn.addEventListener('click', () => {
     }
   } else {
     nextButtonClickTimeout = setTimeout(() => {
-      // Acción simple: avanzar al final del video actual (seek a la duración)
       const duration = parseFloat(timeSlider.max) || 0;
       ipcRenderer.send('seek-video', duration);
       nextButtonClickTimeout = null;
@@ -323,19 +347,20 @@ nextBtn.addEventListener('click', () => {
   }
 });
 
-// Botón "Finalizar": detiene la reproducción y cierra la ventana reproductora
+// Boton "Finalizar"
 finalizeBtn.addEventListener('click', () => {
   ipcRenderer.send('finalize-video');
   isPlaying = false;
   videoStarted = false;
   currentPlayingIndex = null;
   togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-  // Reinicia la barra de tiempo
+  // Reiniciar la barra de tiempo
   timeSlider.value = 0;
   timeDisplay.textContent = '0:00 / 0:00';
 });
+//#endregion
 
-// Slider de tiempo principal
+//#region ⏱️ Slider de tiempo principal
 ipcRenderer.on('time-update', (event, currentTime, duration) => {
   timeSlider.max = duration;
   timeSlider.value = currentTime;
@@ -352,68 +377,74 @@ ipcRenderer.on('video-ended', () => {
   isPlaying = false;
   videoStarted = false;
   currentPlayingIndex = null;
-  // Cambia el botón a icono de play para indicar que se puede iniciar nuevamente
   togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
 });
+//#endregion
 
-// --- Control de Volumen ---
+//#region 🔊 Control de Volumen Principal
 mainVolumeSlider.addEventListener('input', () => {
-  let vol = parseFloat(mainVolumeSlider.value);
+  const vol = parseFloat(mainVolumeSlider.value);
   ipcRenderer.send('set-main-volume', vol);
 });
+//#endregion
 
+//#region 🔊 Control de Volumen Secundario
 secondaryVolumeSlider.addEventListener('input', () => {
-  let vol = parseFloat(secondaryVolumeSlider.value);
+  const vol = parseFloat(secondaryVolumeSlider.value);
   if (secondaryAudio) {
     secondaryAudio.volume = vol;
   }
 });
+//#endregion
 
-// --- Eventos para la Media Secundaria ---
+//#region 🎶 Manejo de la Secuencia Secundaria
 addFilesSecondaryBtn.addEventListener('click', async () => {
   const files = await ipcRenderer.invoke('open-file-dialog');
-  if(files && files.length > 0){
+  if (files && files.length > 0) {
     secondaryLibrary = secondaryLibrary.concat(files);
     renderSecondaryMedia();
   }
 });
 
 removeSecondarySelectedBtn.addEventListener('click', () => {
-  if(selectedSecondaryFile) {
+  if (selectedSecondaryFile) {
     secondaryLibrary = secondaryLibrary.filter(item => item !== selectedSecondaryFile);
     selectedSecondaryFile = null;
     renderSecondaryMedia();
   } else {
-    alert("No se ha seleccionado ningún archivo en la secundaria.");
+    alert('No se ha seleccionado ningún archivo en la secundaria.');
   }
 });
 
-// Reproducción secundaria con barra de tiempo
+// Reproduccion secundaria con barra de tiempo
 playSecondaryBtn.addEventListener('click', () => {
   if (!selectedSecondaryFile) {
     alert("No se ha seleccionado ningún sonido para la secundaria.");
     return;
   }
+  // Si ya habia un audio en reproduccion, pausarlo
   if (secondaryAudio) {
     secondaryAudio.pause();
     secondaryAudio = null;
   }
+  // Crear un nuevo Audio y reproducirlo
   secondaryAudio = new Audio(selectedSecondaryFile);
   secondaryAudio.volume = parseFloat(secondaryVolumeSlider.value);
-  
+
   secondaryAudio.addEventListener('loadedmetadata', () => {
     secondaryTimeSlider.max = secondaryAudio.duration;
     secondaryTimeDisplay.textContent = `0:00 / ${formatTime(secondaryAudio.duration)}`;
   });
-  
+
   secondaryAudio.addEventListener('timeupdate', () => {
     secondaryTimeSlider.value = secondaryAudio.currentTime;
     secondaryTimeDisplay.textContent = `${formatTime(secondaryAudio.currentTime)} / ${formatTime(secondaryAudio.duration)}`;
   });
-  
+
   secondaryAudio.play();
 });
 
+// Detener la reproduccion secundaria
 stopSecondaryBtn.addEventListener('click', () => {
   if (secondaryAudio) {
     secondaryAudio.pause();
@@ -421,11 +452,15 @@ stopSecondaryBtn.addEventListener('click', () => {
   }
 });
 
+// Permitir hacer seek en la reproducción secundaria
 secondaryTimeSlider.addEventListener('change', () => {
   if (secondaryAudio) {
     secondaryAudio.currentTime = parseFloat(secondaryTimeSlider.value);
   }
 });
+//#endregion
 
-// Inicializa la UI
+//#region 🔄 Inicializacion de la Interfaz
+// Al cargar, se actualiza la UI para mostrar los archivos si existen
 updateLibraryUI();
+//#endregion

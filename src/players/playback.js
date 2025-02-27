@@ -1,33 +1,41 @@
-// En playback.js
 const { ipcRenderer } = require('electron');
-const videoPlayer = document.getElementById('videoPlayer');
 
+let videoElement = document.getElementById('videoPlayer');
+let isPaused = false;
+
+//#region 🔄 Eventos del reproductor
 ipcRenderer.on('load-video', (event, videoPath) => {
-  videoPlayer.src = videoPath;
-  videoPlayer.play();
+  videoElement.src = videoPath;
+  videoElement.play();
 });
 
 ipcRenderer.on('pause-video', () => {
-  videoPlayer.pause();
+  videoElement.pause();
+  isPaused = true;
 });
 
 ipcRenderer.on('resume-video', () => {
-  videoPlayer.play();
+  if (isPaused) {
+    videoElement.play();
+    isPaused = false;
+  }
 });
 
 ipcRenderer.on('seek-video', (event, newTime) => {
-  videoPlayer.currentTime = newTime;
+  videoElement.currentTime = newTime;
 });
 
-videoPlayer.addEventListener('timeupdate', () => {
-  ipcRenderer.send('time-update', videoPlayer.currentTime, videoPlayer.duration);
+ipcRenderer.on('set-main-volume', (event, volume) => {
+  videoElement.volume = volume;
+});
+//#endregion
+
+//#region 📡 Emitir eventos de progreso
+videoElement.addEventListener('timeupdate', () => {
+  ipcRenderer.send('time-update', videoElement.currentTime, videoElement.duration);
 });
 
-videoPlayer.addEventListener('ended', () => {
+videoElement.addEventListener('ended', () => {
   ipcRenderer.send('video-ended');
 });
-
-// Listener para ajustar el volumen principal
-ipcRenderer.on('set-main-volume', (event, volume) => {
-  videoPlayer.volume = volume;
-});
+//#endregion

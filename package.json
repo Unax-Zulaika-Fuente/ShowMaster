@@ -2,10 +2,10 @@
   "name": "show-master-alain-zulaika-fuente",
   "version": "1.0.0",
   "productName": "ShowMaster",
-  "description": "Gestionar secuencias de videos y música para espectáculos",
-  "main": "main.js",
+  "description": "ShowMaster | Mixer",
+  "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron src/main.js",
     "build": "electron-builder"
   },
   "build": {
