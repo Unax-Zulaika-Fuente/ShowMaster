@@ -16,7 +16,7 @@ Creado originalmente para los shows del **mago Alain Zulaika Fuente**, también 
 ---
 
 ## 🛠 Instalación
-Puedes descargar la última versión desde la sección **[Releases](https://github.com/tu-usuario/ShowMaster/releases/latest)**.
+Puedes descargar la última versión desde la sección **[Releases](https://github.com/Unax-Zulaika-Fuente/ShowMaster/releases/latest)**.
 
 Si prefieres ejecutarlo desde el código fuente, sigue estos pasos:
 
