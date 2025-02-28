@@ -22,7 +22,7 @@ Si prefieres ejecutarlo desde el código fuente, sigue estos pasos:
 
 ### 🔹 **1. Clonar el repositorio**
 ```sh
-git clone https://github.com/tu-usuario/ShowMaster.git
+git clone https://github.com/Unax-Zulaika-Fuente/ShowMaster.git
 cd ShowMaster
 ```
 
