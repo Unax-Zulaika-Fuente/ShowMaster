@@ -63,7 +63,7 @@ function formatTime(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  
+
   if (h > 0) {
     return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   } else {
@@ -87,6 +87,51 @@ function renderMainSequence() {
     // Resaltar el elemento si es el actual
     li.style.backgroundColor = (index === currentIndex) ? '#99ff99' : '';
 
+    // Contenedor para los botones de flecha
+    const arrowContainer = document.createElement('div');
+    arrowContainer.className = 'arrow-buttons';
+
+    // Solo agregar la flecha hacia arriba si no es el primer elemento
+    if (index > 0) {
+      const upButton = document.createElement('button');
+      upButton.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+      upButton.title = "Mover arriba";
+      upButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evita que se active el clic del li
+        // Intercambiar el elemento actual con el anterior
+        [primaryLibrary[index - 1], primaryLibrary[index]] = [primaryLibrary[index], primaryLibrary[index - 1]];
+        // Actualizar currentIndex si es necesario
+        if (currentIndex === index) {
+          currentIndex = index - 1;
+        } else if (currentIndex === index - 1) {
+          currentIndex = index;
+        }
+        updateLibraryUI();
+      });
+      arrowContainer.appendChild(upButton);
+    }
+
+    // Solo agregar la flecha hacia abajo si no es el último elemento
+    if (index < primaryLibrary.length - 1) {
+      const downButton = document.createElement('button');
+      downButton.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+      downButton.title = "Mover abajo";
+      downButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Intercambiar el elemento actual con el siguiente
+        [primaryLibrary[index], primaryLibrary[index + 1]] = [primaryLibrary[index + 1], primaryLibrary[index]];
+        if (currentIndex === index) {
+          currentIndex = index + 1;
+        } else if (currentIndex === index + 1) {
+          currentIndex = index;
+        }
+        updateLibraryUI();
+      });
+      arrowContainer.appendChild(downButton);
+    }
+
+    li.appendChild(arrowContainer);
+
     // Drag & Drop
     li.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', index);
@@ -100,7 +145,7 @@ function renderMainSequence() {
       e.preventDefault();
       const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
       if (draggedIndex === index) return;
-      
+
       const [movedItem] = primaryLibrary.splice(draggedIndex, 1);
       primaryLibrary.splice(index, 0, movedItem);
 
@@ -146,7 +191,7 @@ function renderSecondaryMedia() {
       allItems.forEach(el => el.style.backgroundColor = '');
       li.style.backgroundColor = '#99ff99';
     });
-    
+
     secondaryMediaList.appendChild(li);
   });
 }
@@ -173,7 +218,7 @@ newProjectBtn.addEventListener('click', async () => {
       secondaryLibrary: secondaryLibrary
     };
     const result = await ipcRenderer.invoke('save-sequence', projectData);
-    if(result.success){
+    if (result.success) {
       alert('Proyecto guardado. Se creará un nuevo proyecto.');
       resetProject();
     } else {
@@ -216,7 +261,7 @@ saveProjectBtn.addEventListener('click', async () => {
   // Guardar el proyecto actual
   const projectData = { primaryLibrary, secondaryLibrary };
   const result = await ipcRenderer.invoke('save-sequence', projectData);
-  if(result.success){
+  if (result.success) {
     alert('Proyecto guardado exitosamente.');
   }
 });
@@ -226,7 +271,7 @@ saveProjectBtn.addEventListener('click', async () => {
 addFilesBtn.addEventListener('click', async () => {
   // Abre el dialogo para seleccionar archivos
   const files = await ipcRenderer.invoke('open-file-dialog');
-  if(files && files.length > 0){
+  if (files && files.length > 0) {
     primaryLibrary = primaryLibrary.concat(files);
     updateLibraryUI();
   }
@@ -236,7 +281,7 @@ removeSelectedBtn.addEventListener('click', () => {
   // Elimina el archivo resaltado (seleccionado) de la lista principal
   const lis = document.querySelectorAll('#sequenceList li');
   lis.forEach(li => {
-    if(li.style.backgroundColor === 'rgb(153, 255, 153)'){
+    if (li.style.backgroundColor === 'rgb(153, 255, 153)') {
       const index = parseInt(li.dataset.index);
       primaryLibrary.splice(index, 1);
     }

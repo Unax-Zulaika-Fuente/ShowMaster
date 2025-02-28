@@ -69,6 +69,23 @@ html, body {
     cursor: pointer;
     background: #fafafa;
   }
+
+  .arrow-buttons {
+    float: right;
+    display: inline-flex;
+    gap: 2px;
+  }
+ 
+  .arrow-buttons button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+ 
+  .arrow-buttons button:hover {
+    color: #007bff;
+  }
   
   /* Contenedor de controles */
   .playback-controls {
