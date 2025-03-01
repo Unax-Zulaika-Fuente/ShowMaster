@@ -1,7 +1,6 @@
 // Importación de módulos
 const { ipcRenderer } = require('electron');
 
-
 //#region Variables Globales
 const DOUBLE_CLICK_DELAY = 250; // ms para detectar doble clic
 let startButtonClickTimeout = null;
@@ -29,6 +28,11 @@ let selectedSecondaryFile = null; // Archivo seleccionado en la lista secundaria
 let secondaryAudio = null;        // Objeto Audio para la reproducción secundaria
 //#endregion
 
+let mainMuted = false;
+let mainPreviousVolume = parseFloat(mainVolumeSlider.value);
+
+let secondaryMuted = false;
+let secondaryPreviousVolume = parseFloat(secondaryVolumeSlider.value);
 
 //#region Elementos del DOM
 const sequenceList = document.getElementById('sequenceList');
@@ -57,8 +61,11 @@ const addFilesSecondaryBtn = document.getElementById('addFilesSecondary');
 const removeSecondarySelectedBtn = document.getElementById('removeSecondarySelected');
 const playSecondaryBtn = document.getElementById('playSecondary');
 const stopSecondaryBtn = document.getElementById('stopSecondary');
-//#endregion
 
+// Elementos para controlar mute/desmute mediante ícono
+const mainVolumeIcon = document.getElementById('mainVolumeIcon');
+const secondaryVolumeIcon = document.getElementById('secondaryVolumeIcon');
+//#endregion
 
 //#region Funciones Auxiliares
 /**
@@ -77,6 +84,45 @@ function formatTime(seconds) {
 }
 //#endregion
 
+//#region Event Listeners para mute/desmute al hacer clic en los íconos de volumen
+mainVolumeIcon.addEventListener('click', () => {
+  mainMuted = !mainMuted;
+  if (mainMuted) {
+    // Al mutear, se guarda el volumen actual y se establece en 0
+    mainPreviousVolume = parseFloat(mainVolumeSlider.value);
+    mainVolumeSlider.value = 0;
+    ipcRenderer.send('set-main-volume', 0);
+    mainVolumeIcon.classList.remove('fa-volume-high');
+    mainVolumeIcon.classList.add('fa-volume-mute');
+  } else {
+    // Al desmutear, se restaura el volumen previo
+    mainVolumeSlider.value = mainPreviousVolume;
+    ipcRenderer.send('set-main-volume', mainPreviousVolume);
+    mainVolumeIcon.classList.remove('fa-volume-mute');
+    mainVolumeIcon.classList.add('fa-volume-high');
+  }
+});
+
+secondaryVolumeIcon.addEventListener('click', () => {
+  secondaryMuted = !secondaryMuted;
+  if (secondaryMuted) {
+    secondaryPreviousVolume = parseFloat(secondaryVolumeSlider.value);
+    secondaryVolumeSlider.value = 0;
+    if (secondaryAudio) {
+      secondaryAudio.volume = 0;
+    }
+    secondaryVolumeIcon.classList.remove('fa-volume-high');
+    secondaryVolumeIcon.classList.add('fa-volume-mute');
+  } else {
+    secondaryVolumeSlider.value = secondaryPreviousVolume;
+    if (secondaryAudio) {
+      secondaryAudio.volume = secondaryPreviousVolume;
+    }
+    secondaryVolumeIcon.classList.remove('fa-volume-mute');
+    secondaryVolumeIcon.classList.add('fa-volume-high');
+  }
+});
+//#endregion
 
 //#region Drag & Drop en Secuencia Principal
 sequenceList.addEventListener('dragover', containerDragOver);
@@ -156,7 +202,6 @@ document.addEventListener('dragend', () => {
 });
 //#endregion
 
-
 //#region Renderizado de la Secuencia Principal
 /**
  * Renderiza la lista principal de archivos.
@@ -222,7 +267,6 @@ function renderMainSequence() {
   });
 }
 //#endregion
-
 
 //#region Drag & Drop en Secuencia Secundaria
 secondaryMediaList.addEventListener('dragover', secondaryContainerDragOver);
@@ -300,7 +344,6 @@ document.addEventListener('dragend', () => {
 });
 //#endregion
 
-
 //#region Renderizado de la Secuencia Secundaria
 /**
  * Renderiza la lista de archivos secundarios.
@@ -359,7 +402,6 @@ function renderSecondaryMedia() {
 }
 //#endregion
 
-
 //#region Actualización de la UI
 /**
  * Actualiza la interfaz de usuario volviendo a renderizar las listas principal y secundaria.
@@ -369,7 +411,6 @@ function updateLibraryUI() {
   renderSecondaryMedia();
 }
 //#endregion
-
 
 //#region Manejo de Proyectos
 newProjectBtn.addEventListener('click', async () => {
@@ -422,7 +463,6 @@ saveProjectBtn.addEventListener('click', async () => {
 });
 //#endregion
 
-
 //#region Manejo de Archivos en la Secuencia Principal
 addFilesBtn.addEventListener('click', async () => {
   const files = await ipcRenderer.invoke('open-file-dialog');
@@ -444,7 +484,6 @@ removeSelectedBtn.addEventListener('click', () => {
   updateLibraryUI();
 });
 //#endregion
-
 
 //#region Controles de Reproducción Principal
 // Botón "Inicio/Anterior"
@@ -609,7 +648,6 @@ finalizeBtn.addEventListener('click', () => {
 });
 //#endregion
 
-
 //#region Slider de Tiempo Principal
 ipcRenderer.on('time-update', (event, currentTime, duration) => {
   timeSlider.max = duration;
@@ -631,7 +669,6 @@ ipcRenderer.on('video-ended', () => {
 });
 //#endregion
 
-
 //#region Controles de Volumen
 mainVolumeSlider.addEventListener('input', () => {
   const vol = parseFloat(mainVolumeSlider.value);
@@ -645,7 +682,6 @@ secondaryVolumeSlider.addEventListener('input', () => {
   }
 });
 //#endregion
-
 
 //#region Controles de Reproducción Secundaria
 addFilesSecondaryBtn.addEventListener('click', async () => {
@@ -704,7 +740,6 @@ secondaryTimeSlider.addEventListener('change', () => {
   }
 });
 //#endregion
-
 
 //#region Inicialización de la Interfaz
 updateLibraryUI();
