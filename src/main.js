@@ -203,6 +203,13 @@ ipcMain.on('resume-video', () => {
   }
 });
 
+ipcMain.on('load-video-preview', (event, videoPath) => {
+  if (playbackWindow && !playbackWindow.isDestroyed()) {
+    playbackWindow.webContents.send('load-video-preview', videoPath);
+  }
+});
+
+
 ipcMain.on('finalize-video', () => {
   if (playbackWindow && !playbackWindow.isDestroyed()) {
     playbackWindow.close();
