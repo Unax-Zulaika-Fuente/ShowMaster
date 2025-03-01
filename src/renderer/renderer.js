@@ -28,12 +28,6 @@ let selectedSecondaryFile = null; // Archivo seleccionado en la lista secundaria
 let secondaryAudio = null;        // Objeto Audio para la reproducción secundaria
 //#endregion
 
-let mainMuted = false;
-let mainPreviousVolume = parseFloat(mainVolumeSlider.value);
-
-let secondaryMuted = false;
-let secondaryPreviousVolume = parseFloat(secondaryVolumeSlider.value);
-
 //#region Elementos del DOM
 const sequenceList = document.getElementById('sequenceList');
 const secondaryMediaList = document.getElementById('secondaryMediaList');
@@ -65,6 +59,12 @@ const stopSecondaryBtn = document.getElementById('stopSecondary');
 // Elementos para controlar mute/desmute mediante ícono
 const mainVolumeIcon = document.getElementById('mainVolumeIcon');
 const secondaryVolumeIcon = document.getElementById('secondaryVolumeIcon');
+
+let mainMuted = false;
+let mainPreviousVolume = parseFloat(mainVolumeSlider.value);
+
+let secondaryMuted = false;
+let secondaryPreviousVolume = parseFloat(secondaryVolumeSlider.value);
 //#endregion
 
 //#region Funciones Auxiliares
