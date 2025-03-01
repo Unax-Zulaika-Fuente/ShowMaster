@@ -86,6 +86,26 @@ html, body {
   .arrow-buttons button:hover {
     color: #007bff;
   }
+
+  .drag-over-top {
+    border-top: 2px solid #007bff;
+  }
+  
+  .drag-over-bottom {
+    border-bottom: 2px solid #007bff;
+  }  
+
+  .drag-placeholder {
+    opacity: 0.5;
+    border: 2px dashed #007bff;
+    background-color: #f0f0f0;
+    padding: 5px;
+    pointer-events: none; /* Opcional: evita que reciba eventos */
+  }
+
+  #sequenceList {
+    position: relative;
+  }
   
   /* Contenedor de controles */
   .playback-controls {

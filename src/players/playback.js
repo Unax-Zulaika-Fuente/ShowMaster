@@ -21,6 +21,13 @@ ipcRenderer.on('resume-video', () => {
   }
 });
 
+ipcRenderer.on('load-video-preview', (event, videoPath) => {
+  videoElement.src = videoPath;
+  videoElement.load();
+  videoElement.pause();
+  videoElement.currentTime = 0;
+});
+
 ipcRenderer.on('seek-video', (event, newTime) => {
   videoElement.currentTime = newTime;
 });
