@@ -433,6 +433,8 @@ newProjectBtn.addEventListener('click', async () => {
  * Reinicia el proyecto.
  */
 function resetProject() {
+  // Se envía un mensaje al proceso principal para cerrar las ventanas de reproducción (si estuvieran activas)
+  ipcRenderer.send('close-playback-windows');
   primaryLibrary = [];
   secondaryLibrary = [];
   currentIndex = 0;

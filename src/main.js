@@ -172,7 +172,6 @@ ipcMain.handle('confirm-new-project', async () => {
   });
   return result.response; // 0: Guardar y Nuevo, 1: Nuevo sin guardar, 2: Cancelar
 });
-
 //#endregion
 
 //#region ▶️ Control de reproducción principal
@@ -259,3 +258,8 @@ ipcMain.on('stop-secondary', () => {
 });
 //#endregion
 
+//#region NUEVO: Cerrar reproductores al crear un nuevo proyecto
+ipcMain.on('close-playback-windows', () => {
+  closeAllWindows();
+});
+//#endregion
