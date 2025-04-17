@@ -172,10 +172,14 @@ html, body {
     align-items: center;
     cursor: pointer;
   }
+
   .volume-icon {
     font-size: 1.5rem;
-    color: #333;
+    width: 2rem;
+    display: inline-block;
+    text-align: center;
   }
+  
   .volume-slider {
     position: absolute;
     top: 50%;

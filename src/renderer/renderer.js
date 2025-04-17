@@ -722,12 +722,38 @@ ipcRenderer.on('video-ended', () => {
 mainVolumeSlider.addEventListener('input', () => {
   const vol = parseFloat(mainVolumeSlider.value);
   ipcRenderer.send('set-main-volume', vol);
+
+  mainVolumeIcon.classList.remove(
+    'fa-volume-mute','fa-volume-low','fa-volume-high'
+  );
+  if (vol === 0) {
+    mainVolumeIcon.classList.add('fa-volume-mute');
+    mainMuted = true;
+  } else if (vol < 0.5) {
+    mainVolumeIcon.classList.add('fa-volume-low');
+    mainMuted = false;
+  } else {
+    mainVolumeIcon.classList.add('fa-volume-high');
+    mainMuted = false;
+  }
 });
 
 secondaryVolumeSlider.addEventListener('input', () => {
   const vol = parseFloat(secondaryVolumeSlider.value);
-  if (secondaryAudio) {
-    secondaryAudio.volume = vol;
+  if (secondaryAudio) secondaryAudio.volume = vol;
+
+  secondaryVolumeIcon.classList.remove(
+    'fa-volume-mute','fa-volume-low','fa-volume-high'
+  );
+  if (vol === 0) {
+    secondaryVolumeIcon.classList.add('fa-volume-mute');
+    secondaryMuted = true;
+  } else if (vol < 0.5) {
+    secondaryVolumeIcon.classList.add('fa-volume-low');
+    secondaryMuted = false;
+  } else {
+    secondaryVolumeIcon.classList.add('fa-volume-high');
+    secondaryMuted = false;
   }
 });
 //#endregion
