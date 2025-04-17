@@ -13,6 +13,10 @@ let isPlaying = false;           // Estado de reproducción principal (play/paus
 let videoStarted = false;        // Indica si el video ya inició alguna vez
 let currentPlayingIndex = null;  // Índice del video actualmente en reproducción (null si ninguno)
 let videoFinished = false;       // Flag que indica si el video ha finalizado
+let isSeekingSlider = false;
+let isSeekingSecondary = false;
+let secondaryMuteFlags = {};
+let mainTemporarilyMuted = false;
 
 // Variables para Drag & Drop en la secuencia principal
 let dragPlaceholder = null;
@@ -26,9 +30,6 @@ let secondaryDragNewIndex = null;
 
 let selectedSecondaryFile = null; // Archivo seleccionado en la lista secundaria
 let secondaryAudio = null;        // Objeto Audio para la reproducción secundaria
-
-let isSeekingSlider = false;
-let isSeekingSecondary = false;
 //#endregion
 
 //#region Elementos del DOM
@@ -353,56 +354,85 @@ document.addEventListener('dragend', () => {
  */
 function renderSecondaryMedia() {
   secondaryMediaList.innerHTML = '';
+
   secondaryLibrary.forEach((item, index) => {
     const li = document.createElement('li');
-    li.textContent = item.split(/(\\|\/)/g).pop();
-    li.dataset.index = index;
     li.draggable = true;
-    li.style.backgroundColor = (selectedSecondaryFile === item) ? '#99ff99' : '';
-    
-    // Botones para reordenar
+
+    // 1. Checkbox individual
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.className = 'secondary-mute-checkbox';
+    cb.checked = !!secondaryMuteFlags[index];
+    cb.addEventListener('change', () => {
+      secondaryMuteFlags[index] = cb.checked;
+    });
+
+    // 2. Nombre de archivo
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = item.split(/(\\|\/)/g).pop();
+    nameSpan.style.margin = '0 8px';
+
+    // 3. Flechas de reorder
     const arrowContainer = document.createElement('div');
     arrowContainer.className = 'arrow-buttons';
     if (index > 0) {
-      const upButton = document.createElement('button');
-      upButton.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
-      upButton.title = "Mover arriba";
-      upButton.addEventListener('click', (e) => {
+      const up = document.createElement('button');
+      up.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+      up.title = 'Mover arriba';
+      up.addEventListener('click', e => {
         e.stopPropagation();
-        [secondaryLibrary[index - 1], secondaryLibrary[index]] = [secondaryLibrary[index], secondaryLibrary[index - 1]];
+        [secondaryLibrary[index-1], secondaryLibrary[index]] =
+          [secondaryLibrary[index], secondaryLibrary[index-1]];
         updateLibraryUI();
       });
-      arrowContainer.appendChild(upButton);
+      arrowContainer.appendChild(up);
     }
     if (index < secondaryLibrary.length - 1) {
-      const downButton = document.createElement('button');
-      downButton.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
-      downButton.title = "Mover abajo";
-      downButton.addEventListener('click', (e) => {
+      const down = document.createElement('button');
+      down.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+      down.title = 'Mover abajo';
+      down.addEventListener('click', e => {
         e.stopPropagation();
-        [secondaryLibrary[index], secondaryLibrary[index + 1]] = [secondaryLibrary[index + 1], secondaryLibrary[index]];
+        [secondaryLibrary[index], secondaryLibrary[index+1]] =
+          [secondaryLibrary[index+1], secondaryLibrary[index]];
         updateLibraryUI();
       });
-      arrowContainer.appendChild(downButton);
+      arrowContainer.appendChild(down);
     }
-    li.appendChild(arrowContainer);
-    
-    // Eventos para arrastrar y seleccionar
-    li.addEventListener('dragstart', (e) => {
+
+    // 4. Click para seleccionar
+    li.addEventListener('click', () => {
+      selectedSecondaryFile = item;
+      // resetea fondos y pinta solo el seleccionado
+      secondaryMediaList.querySelectorAll('li').forEach(el => el.style.background = '');
+      li.style.background = '#99ff99';
+    });
+
+    // 5. Drag & drop (igual que antes)
+    li.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', index);
       secondaryDraggedIndex = index;
       li.classList.add('secondary-dragging');
     });
-    li.addEventListener('click', () => {
-      selectedSecondaryFile = item;
-      const allItems = secondaryMediaList.querySelectorAll('li');
-      allItems.forEach(el => el.style.backgroundColor = '');
-      li.style.backgroundColor = '#99ff99';
-    });
-    
+
+    // Montaje final
+    li.appendChild(cb);
+    li.appendChild(nameSpan);
+    li.appendChild(arrowContainer);
     secondaryMediaList.appendChild(li);
   });
 }
+
+const toggleAllSecondary = document.getElementById('toggleAllSecondary');
+toggleAllSecondary.addEventListener('change', () => {
+  const v = toggleAllSecondary.checked;
+  secondaryLibrary.forEach((_, idx) => {
+    secondaryMuteFlags[idx] = v;
+  });
+  renderSecondaryMedia();
+});
+
 //#endregion
 
 //#region Actualización de la UI
@@ -419,7 +449,11 @@ function updateLibraryUI() {
 newProjectBtn.addEventListener('click', async () => {
   const response = await ipcRenderer.invoke('confirm-new-project');
   if (response === 0) {
-    const projectData = { primaryLibrary, secondaryLibrary };
+    const projectData = {
+      primaryLibrary,
+      secondaryLibrary,
+      secondaryMuteFlags
+    };
     const result = await ipcRenderer.invoke('save-sequence', projectData);
     if (result.success) {
       alert('Proyecto guardado. Se creará un nuevo proyecto.');
@@ -451,7 +485,7 @@ function resetProject() {
   videoFinished = false;
   currentPlayingIndex = null;
 
-  // Opcional: si hubiera audio secundario en curso, para y limpia
+  // 4. Para y limpia audio secundario si existiera
   if (secondaryAudio) {
     secondaryAudio.pause();
     secondaryAudio = null;
@@ -459,21 +493,26 @@ function resetProject() {
     secondaryTimeDisplay.textContent = '0:00 / 0:00';
   }
 
-  // 4. Restablece UI de controles
+  // 5. Restablece UI de controles de vídeo
   togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
   timeSlider.value = 0;
   timeDisplay.textContent = '0:00 / 0:00';
 
-  // 5. Refresca listas
+  // 6. Resetea flags y checkboxes de secundaria
+  secondaryMuteFlags = {};
+  const globalCb = document.getElementById('toggleAllSecondary');
+  if (globalCb) globalCb.checked = false;
+
+  // 7. Vuelve a renderizar listas (con todos los checkboxes desmarcados)
   updateLibraryUI();
 }
-
 
 loadProjectBtn.addEventListener('click', async () => {
   const loadedProject = await ipcRenderer.invoke('load-sequence');
   if (loadedProject && typeof loadedProject === 'object') {
-    primaryLibrary = loadedProject.primaryLibrary || [];
-    secondaryLibrary = loadedProject.secondaryLibrary || [];
+    primaryLibrary       = loadedProject.primaryLibrary       || [];
+    secondaryLibrary     = loadedProject.secondaryLibrary     || [];
+    secondaryMuteFlags   = loadedProject.secondaryMuteFlags   || {};
     currentIndex = 0;
     isPlaying = false;
     togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -482,7 +521,11 @@ loadProjectBtn.addEventListener('click', async () => {
 });
 
 saveProjectBtn.addEventListener('click', async () => {
-  const projectData = { primaryLibrary, secondaryLibrary };
+  const projectData = {
+    primaryLibrary,
+    secondaryLibrary,
+    secondaryMuteFlags
+  };
   const result = await ipcRenderer.invoke('save-sequence', projectData);
   if (result.success) {
     alert('Proyecto guardado exitosamente.');
@@ -777,33 +820,73 @@ removeSecondarySelectedBtn.addEventListener('click', () => {
   }
 });
 
+// 2) Listener completo de playSecondaryBtn:
 playSecondaryBtn.addEventListener('click', () => {
   if (!selectedSecondaryFile) {
     alert("No se ha seleccionado ningún sonido para la secundaria.");
     return;
   }
-  // Si ya había un audio, lo detenemos
+
+  // 2.1 Detener cualquier instancia previa
   if (secondaryAudio) {
     secondaryAudio.pause();
     secondaryAudio = null;
   }
-  // ¡Aquí reaparecen la creación y configuración!
+
+  // 2.2 Crear nuevo Audio y asignar volumen
   secondaryAudio = new Audio(selectedSecondaryFile);
   secondaryAudio.volume = parseFloat(secondaryVolumeSlider.value);
 
-  // Metadata para inicializar slider
+  // 2.3 Si toca mutear la principal...
+  const idx = secondaryLibrary.indexOf(selectedSecondaryFile);
+  if (secondaryMuteFlags[idx]) {
+    mainPreviousVolume = parseFloat(mainVolumeSlider.value);
+    ipcRenderer.send('set-main-volume', 0);
+
+    // Visual: ponemos el slider a 0 y actualizamos icono
+    mainVolumeSlider.value = 0;
+    mainVolumeIcon.classList.remove('fa-volume-low','fa-volume-high');
+    mainVolumeIcon.classList.add('fa-volume-mute');
+    mainMuted = true;
+
+    mainTemporarilyMuted = true;
+  }
+
+  // 2.4 Inicializar slider y display
   secondaryAudio.addEventListener('loadedmetadata', () => {
     secondaryTimeSlider.max = secondaryAudio.duration;
     secondaryTimeSlider.value = 0;
     secondaryTimeDisplay.textContent = `0:00 / ${formatTime(secondaryAudio.duration)}`;
   });
 
-  // Actualización de slider salvo que estemos draggeando
+  // 2.5 Actualizar slider en reproducción normal
   secondaryAudio.addEventListener('timeupdate', () => {
     if (!isSeekingSecondary) {
       secondaryTimeSlider.value = secondaryAudio.currentTime;
-      secondaryTimeDisplay.textContent = 
+      secondaryTimeDisplay.textContent =
         `${formatTime(secondaryAudio.currentTime)} / ${formatTime(secondaryAudio.duration)}`;
+    }
+  });
+
+  // 2.6 Al acabar, restaurar la principal si la muteamos
+  secondaryAudio.addEventListener('ended', () => {
+    if (mainTemporarilyMuted) {
+      ipcRenderer.send('set-main-volume', mainPreviousVolume);
+
+      // Restauramos visual
+      mainVolumeSlider.value = mainPreviousVolume;
+      mainVolumeIcon.classList.remove('fa-volume-mute');
+      // Elegimos icono según nivel restaurado
+      if (mainPreviousVolume === 0) {
+        mainVolumeIcon.classList.add('fa-volume-mute');
+      } else if (mainPreviousVolume < 0.5) {
+        mainVolumeIcon.classList.add('fa-volume-low');
+      } else {
+        mainVolumeIcon.classList.add('fa-volume-high');
+      }
+      mainMuted = false;
+
+      mainTemporarilyMuted = false;
     }
   });
 
@@ -835,6 +918,27 @@ stopSecondaryBtn.addEventListener('click', () => {
   if (secondaryAudio) {
     secondaryAudio.pause();
     secondaryAudio = null;
+  }
+
+  // Si habíamos muteado la principal, la restauramos al detener manualmente
+  if (mainTemporarilyMuted) {
+    // Funcional: restaurar volumen
+    ipcRenderer.send('set-main-volume', mainPreviousVolume);
+
+    // Visual: slider e icono
+    mainVolumeSlider.value = mainPreviousVolume;
+    mainVolumeIcon.classList.remove('fa-volume-mute');
+    if (mainPreviousVolume === 0) {
+      mainVolumeIcon.classList.add('fa-volume-mute');
+    } else if (mainPreviousVolume < 0.5) {
+      mainVolumeIcon.classList.add('fa-volume-low');
+    } else {
+      mainVolumeIcon.classList.add('fa-volume-high');
+    }
+    mainMuted = false;
+
+    // Limpiar flag
+    mainTemporarilyMuted = false;
   }
 });
 

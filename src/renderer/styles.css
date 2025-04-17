@@ -198,6 +198,16 @@ html, body {
     opacity: 1;
   }
   
+  /* styles.css */
+.global-mute-toggle {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+}
+
+
   /* Volumen slider inputs para personalizar apariencia */
   input[type=range] {
     -webkit-appearance: none;
