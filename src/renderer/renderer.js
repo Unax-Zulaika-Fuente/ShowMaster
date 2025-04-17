@@ -26,6 +26,8 @@ let secondaryDragNewIndex = null;
 
 let selectedSecondaryFile = null; // Archivo seleccionado en la lista secundaria
 let secondaryAudio = null;        // Objeto Audio para la reproducción secundaria
+
+let isSeekingSlider = false;
 //#endregion
 
 //#region Elementos del DOM
@@ -675,8 +677,30 @@ finalizeBtn.addEventListener('click', () => {
 //#region Slider de Tiempo Principal
 ipcRenderer.on('time-update', (event, currentTime, duration) => {
   timeSlider.max = duration;
-  timeSlider.value = currentTime;
-  timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+  if (!isSeekingSlider) {
+    timeSlider.value = currentTime;
+    timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+  }
+});
+
+// Detectar inicio de drag:
+timeSlider.addEventListener('mousedown', () => {
+  isSeekingSlider = true;
+});
+
+// Detectar fin de drag y mandar seek:
+timeSlider.addEventListener('mouseup', () => {
+  const newTime = parseFloat(timeSlider.value);
+  ipcRenderer.send('seek-video', newTime);
+  // Actualizamos también la UI al momento
+  timeDisplay.textContent = `${formatTime(newTime)} / ${formatTime(timeSlider.max)}`;
+  isSeekingSlider = false;
+});
+
+// (Opcional) Para feedback en tiempo real mientras arrastras:
+timeSlider.addEventListener('input', () => {
+  const previewTime = parseFloat(timeSlider.value);
+  timeDisplay.textContent = `${formatTime(previewTime)} / ${formatTime(timeSlider.max)}`;
 });
 
 timeSlider.addEventListener('change', () => {
