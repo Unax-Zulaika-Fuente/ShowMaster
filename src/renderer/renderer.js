@@ -30,6 +30,11 @@ let secondaryDragNewIndex = null;
 
 let selectedSecondaryFile = null; // Archivo seleccionado en la lista secundaria
 let secondaryAudio = null;        // Objeto Audio para la reproducción secundaria
+
+// Efectos de sonidos instantaneos
+let instantSounds = [];  
+let modeInstant = null;
+let instantAudioPlayers = []; 
 //#endregion
 
 //#region Elementos del DOM
@@ -64,6 +69,14 @@ const stopSecondaryBtn = document.getElementById('stopSecondary');
 // Elementos para controlar mute/desmute mediante ícono
 const mainVolumeIcon = document.getElementById('mainVolumeIcon');
 const secondaryVolumeIcon = document.getElementById('secondaryVolumeIcon');
+
+// Efectos de sonidos instantaneos
+const addInstantBtn          = document.getElementById('addInstant');
+const deleteInstantToggleBtn = document.getElementById('deleteInstantToggle');
+const editInstantToggleBtn   = document.getElementById('editInstantToggle');
+const emojiInstantToggleBtn = document.getElementById('emojiInstantToggle');
+const stopAllInstantBtn = document.getElementById('stopAllInstant');
+const instantDeck            = document.getElementById('instantDeck');
 
 let mainMuted = false;
 let mainPreviousVolume = parseFloat(mainVolumeSlider.value);
@@ -443,6 +456,7 @@ toggleAllSecondary.addEventListener('change', () => {
 function updateLibraryUI() {
   renderMainSequence();
   renderSecondaryMedia();
+  renderInstantDeck();
 }
 //#endregion
 
@@ -453,7 +467,8 @@ newProjectBtn.addEventListener('click', async () => {
     const projectData = {
       primaryLibrary,
       secondaryLibrary,
-      secondaryMuteFlags
+      secondaryMuteFlags,
+      instantSounds
     };
     const result = await ipcRenderer.invoke('save-sequence', projectData);
     if (result.success) {
@@ -504,7 +519,14 @@ function resetProject() {
   const globalCb = document.getElementById('toggleAllSecondary');
   if (globalCb) globalCb.checked = false;
 
-  // 7. Vuelve a renderizar listas (con todos los checkboxes desmarcados)
+  // 7. Resetea efectos instantaneos
+  instantSounds = [];
+  modeInstant    = null;
+  addInstantBtn.classList.remove('active');
+  deleteInstantToggleBtn.classList.remove('active');
+  editInstantToggleBtn.classList.remove('active');
+
+  // 8. Vuelve a renderizar listas (con todos los checkboxes desmarcados)
   updateLibraryUI();
 }
 
@@ -517,6 +539,8 @@ loadProjectBtn.addEventListener('click', async () => {
     currentIndex = 0;
     isPlaying = false;
     togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    instantSounds = loadedProject.instantSounds || [];
+    modeInstant   = null;
     updateLibraryUI();
   }
 });
@@ -525,7 +549,8 @@ saveProjectBtn.addEventListener('click', async () => {
   const projectData = {
     primaryLibrary,
     secondaryLibrary,
-    secondaryMuteFlags
+    secondaryMuteFlags,
+    instantSounds
   };
   const result = await ipcRenderer.invoke('save-sequence', projectData);
   if (result.success) {
@@ -971,6 +996,192 @@ secondaryTimeSlider.addEventListener('change', () => {
   if (secondaryAudio) {
     secondaryAudio.currentTime = parseFloat(secondaryTimeSlider.value);
   }
+});
+//#endregion
+
+//#region Efectos instantaneos
+function renderInstantDeck() {
+  instantDeck.innerHTML = '';
+
+  instantSounds.forEach((entry, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'instant-button';
+
+    // Placeholder o emoji
+    btn.innerHTML = entry.file
+      ? (entry.icon || '🔊')
+      : '<i class="fa-regular fa-square-plus"></i>';
+
+    // Modo borrar / editar / emoji
+    if (modeInstant === 'delete') btn.classList.add('instant-delete-mode');
+    if (modeInstant === 'edit')   btn.classList.add('instant-edit-mode');
+    if (modeInstant === 'emoji')  btn.classList.add('instant-emoji-mode');
+
+    btn.addEventListener('click', async () => {
+      // BORRAR
+      if (modeInstant === 'delete') {
+        instantSounds.splice(idx, 1);
+        renderInstantDeck();
+        return;
+      }
+      // EDITAR SONIDO
+      if (modeInstant === 'edit' && entry.file) {
+        const files = await ipcRenderer.invoke('open-file-dialog');
+        if (files?.[0]) {
+          entry.file = files[0];
+          const emoji = await showEmojiPicker(entry.icon);
+          if (emoji != null) entry.icon = emoji;
+        }
+        renderInstantDeck();
+        return;
+      }
+      // CAMBIAR ICONO (modo emoji)
+      if (modeInstant === 'emoji' && entry.file) {
+        const emoji = await showEmojiPicker(entry.icon);
+        if (emoji == null) {
+          // cancelar → nada
+        } else {
+          entry.icon = emoji;
+        }
+        renderInstantDeck();
+        return;
+      }
+      // SLOT VACIO → asignar sonido + emoji
+      if (!entry.file) {
+        const files = await ipcRenderer.invoke('open-file-dialog');
+        if (!files?.[0]) return;
+        entry.file = files[0];
+        const emoji = await showEmojiPicker('🔊');
+        if (emoji == null) {
+          instantSounds.splice(idx, 1);
+        } else {
+          entry.icon = emoji;
+        }
+        renderInstantDeck();
+        return;
+      }
+      // REPRODUCIR
+      const audio = new Audio(entry.file);
+      audio.play();
+      instantAudioPlayers.push(audio);
+      // al acabar, lo limpia del array
+      audio.addEventListener('ended', () => {
+        instantAudioPlayers = instantAudioPlayers.filter(a => a !== audio);
+      });
+    });
+
+    instantDeck.appendChild(btn);
+  });
+}
+
+// Añadir boton
+// Añade solo el slot vacio (icono +)
+addInstantBtn.addEventListener('click', () => {
+  instantSounds.push({ file: null, icon: null });
+  renderInstantDeck();
+});
+
+
+/**
+ * Muestra un modal flotante para que el usuario escriba o pegue un emoji.
+ * Devuelve una Promise que resuelve con el emoji (o el valor por defecto).
+ */
+function showEmojiPicker(defaultVal = '🔊') {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    Object.assign(overlay.style, {
+      position: 'fixed', top:0, left:0,
+      width:'100vw', height:'100vh',
+      background:'rgba(0,0,0,0.5)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      zIndex:10000
+    });
+
+    const modal = document.createElement('div');
+    Object.assign(modal.style, {
+      background:'#fff', padding:'20px', borderRadius:'8px',
+      textAlign:'center', minWidth:'200px'
+    });
+
+    const prompt = document.createElement('div');
+    prompt.textContent = 'Elige un emoji para el efecto';
+    prompt.style.marginBottom = '10px';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = defaultVal;
+    Object.assign(input.style, {
+      fontSize:'2rem', textAlign:'center', width:'3rem', marginBottom:'10px'
+    });
+
+    const ok = document.createElement('button');
+    ok.textContent = 'OK';
+    const cancel = document.createElement('button');
+    cancel.textContent = 'Cancelar';
+    cancel.style.marginLeft = '10px';
+
+    modal.append(prompt, input, ok, cancel);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    input.focus();
+
+    ok.addEventListener('click', () => {
+      const val = input.value.trim() || defaultVal;
+      document.body.removeChild(overlay);
+      resolve(val);
+    });
+    cancel.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      resolve(null);
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') ok.click();
+      if (e.key === 'Escape') cancel.click();
+    });
+  });
+}
+
+// Toggle Delete
+deleteInstantToggleBtn.addEventListener('click', () => {
+  modeInstant = modeInstant === 'delete' ? null : 'delete';
+  deleteInstantToggleBtn.classList.toggle('active', modeInstant === 'delete');
+  // desactiva el otro modo
+  modeInstant === 'delete' && editInstantToggleBtn.classList.remove('active');
+  renderInstantDeck();
+});
+
+// Toggle Edit
+editInstantToggleBtn.addEventListener('click', () => {
+  modeInstant = modeInstant === 'edit' ? null : 'edit';
+  editInstantToggleBtn.classList.toggle('active', modeInstant === 'edit');
+  deleteInstantToggleBtn.classList.remove('active');
+  renderInstantDeck();
+});
+
+//Toggle Edit emoji
+emojiInstantToggleBtn.addEventListener('click', () => {
+  // alterna el modo emoji
+  modeInstant = (modeInstant === 'emoji') ? null : 'emoji';
+
+  // pinta/despinta el boton
+  emojiInstantToggleBtn.classList.toggle('active', modeInstant === 'emoji');
+  emojiInstantToggleBtn.classList.toggle('emoji', modeInstant === 'emoji');
+
+  // desactiva los otros modos
+  if (modeInstant === 'emoji') {
+    deleteInstantToggleBtn.classList.remove('active');
+    editInstantToggleBtn.classList.remove('active');
+  }
+  renderInstantDeck();
+});
+
+// Stop Audios instantaneos
+stopAllInstantBtn.addEventListener('click', () => {
+  instantAudioPlayers.forEach(a => {
+    a.pause();
+    a.currentTime = 0;
+  });
+  instantAudioPlayers = [];
 });
 //#endregion
 

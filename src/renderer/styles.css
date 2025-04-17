@@ -207,6 +207,73 @@ html, body {
   font-weight: bold;
 }
 
+.instant-column {
+  flex: 1;
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  border-left: 1px solid #ccc;
+}
+
+.deck-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.deck-controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.deck-controls button.active {
+  color: #007bff;
+}
+
+.instant-deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.instant-button {
+  width: 100%;
+  height: 60px;
+  background: #fafafa;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.instant-button.instant-delete-mode {
+  background: #ffe5e5;
+}
+
+.instant-button.instant-edit-mode {
+  background: #e5f0ff;
+}
+
+.instant-button i {
+  font-size: 1.5rem;
+}
+
+.instant-button.instant-emoji-mode {
+  background: #fff4e5;
+  border-color: #ffbb33;
+}
+.deck-controls button.active.emoji {
+  color: #ffbb33;
+}
 
   /* Volumen slider inputs para personalizar apariencia */
   input[type=range] {
