@@ -6,6 +6,7 @@ let isPaused = false;
 //#region 🔄 Eventos del reproductor
 ipcRenderer.on('load-video', (event, videoPath) => {
   videoElement.src = videoPath;
+  videoElement.load();
   videoElement.play();
 });
 
@@ -34,6 +35,12 @@ ipcRenderer.on('seek-video', (event, newTime) => {
 
 ipcRenderer.on('set-main-volume', (event, volume) => {
   videoElement.volume = volume;
+});
+
+// Nuevo manejador para reiniciar y limpiar la referencia del video
+ipcRenderer.on('finalize-video', () => {
+  videoElement.pause();
+  videoElement.src = "";
 });
 //#endregion
 

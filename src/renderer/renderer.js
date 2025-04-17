@@ -433,16 +433,38 @@ newProjectBtn.addEventListener('click', async () => {
  * Reinicia el proyecto.
  */
 function resetProject() {
-  // Se envía un mensaje al proceso principal para cerrar las ventanas de reproducción (si estuvieran activas)
+  // 1. Cierra reproductores
   ipcRenderer.send('close-playback-windows');
+
+  // 2. Resetea librerías y selección
   primaryLibrary = [];
   secondaryLibrary = [];
   currentIndex = 0;
   selectedSecondaryFile = null;
+
+  // 3. Resetea TODO el estado de playback
   isPlaying = false;
+  videoStarted = false;
+  videoFinished = false;
+  currentPlayingIndex = null;
+
+  // Opcional: si hubiera audio secundario en curso, para y limpia
+  if (secondaryAudio) {
+    secondaryAudio.pause();
+    secondaryAudio = null;
+    secondaryTimeSlider.value = 0;
+    secondaryTimeDisplay.textContent = '0:00 / 0:00';
+  }
+
+  // 4. Restablece UI de controles
   togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+  timeSlider.value = 0;
+  timeDisplay.textContent = '0:00 / 0:00';
+
+  // 5. Refresca listas
   updateLibraryUI();
 }
+
 
 loadProjectBtn.addEventListener('click', async () => {
   const loadedProject = await ipcRenderer.invoke('load-sequence');
