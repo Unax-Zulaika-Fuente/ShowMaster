@@ -2,6 +2,8 @@
 const { ipcRenderer } = require('electron');
 
 //#region Variables Globales
+let isShowMode = false;
+
 const DOUBLE_CLICK_DELAY = 250; // ms para detectar doble clic
 let startButtonClickTimeout = null;
 let nextButtonClickTimeout = null;
@@ -100,6 +102,45 @@ function formatTime(seconds) {
     ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` 
     : `${m}:${s.toString().padStart(2, '0')}`;
 }
+//#endregion
+
+//#region Modo espectaculo
+// Toggle Modo Espectaculo/Edicion
+const viewModeToggle = document.getElementById('viewModeToggle');
+viewModeToggle.addEventListener('click', () => {
+  isShowMode = !isShowMode;
+  viewModeToggle.textContent = isShowMode
+    ? 'Visualizar modo Edición'
+    : 'Visualizar modo Espectáculo';
+  updateViewMode();
+});
+
+function updateViewMode() {
+  // Controles principal
+  document.getElementById("addFiles").classList.toggle("hidden", isShowMode);
+  document
+    .getElementById("removeSelected")
+    .classList.toggle("hidden", isShowMode);
+  // Controles secundaria
+  document
+    .getElementById("addFilesSecondary")
+    .classList.toggle("hidden", isShowMode);
+  document
+    .getElementById("removeSecondarySelected")
+    .classList.toggle("hidden", isShowMode);
+  // Efectos instantaneos: solo 'stopAllInstant' en modo espectaculo
+  stopAllInstantBtn.classList.toggle("hidden", !isShowMode);
+  document
+    .querySelectorAll("#instantColumn .deck-controls button")
+    .forEach((btn) => {
+      if (btn !== stopAllInstantBtn) {
+        btn.classList.toggle("hidden", isShowMode);
+      }
+    });
+}
+
+// Ejecutar al arrancar para aplicar el estado inicial
+updateViewMode();
 //#endregion
 
 //#region Event Listeners para mute/desmute al hacer clic en los íconos de volumen

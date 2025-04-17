@@ -3,6 +3,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+    color: #333;
   }
   
   /* Barra superior */
@@ -26,10 +27,27 @@ html, body {
   .menu-bar .menu-item:hover {
     text-decoration: underline;
   }
+
+  .hidden {
+    display: none !important;
+  }  
+
+  .view-toggle {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 1.1rem;
+    background: #fff;
+    color: #000;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
   
   /* Contenedor principal */
   .container {
     padding: 20px;
+    padding-top: 0px;
     margin-top: 50px; /* Espacio para la barra superior */
     min-height: calc(100% - 50px);
   }
@@ -44,6 +62,7 @@ html, body {
     flex: 1;
     background: #fff;
     padding: 10px;
+    padding-top: 0px;
     display: flex;
     flex-direction: column;
     height: 80vh;
@@ -211,6 +230,7 @@ html, body {
   flex: 1;
   background: #fff;
   padding: 10px;
+  padding-top: 0px;
   display: flex;
   flex-direction: column;
   height: 80vh;
