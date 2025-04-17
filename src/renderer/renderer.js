@@ -28,6 +28,7 @@ let selectedSecondaryFile = null; // Archivo seleccionado en la lista secundaria
 let secondaryAudio = null;        // Objeto Audio para la reproducción secundaria
 
 let isSeekingSlider = false;
+let isSeekingSecondary = false;
 //#endregion
 
 //#region Elementos del DOM
@@ -755,24 +756,53 @@ playSecondaryBtn.addEventListener('click', () => {
     alert("No se ha seleccionado ningún sonido para la secundaria.");
     return;
   }
+  // Si ya había un audio, lo detenemos
   if (secondaryAudio) {
     secondaryAudio.pause();
     secondaryAudio = null;
   }
+  // ¡Aquí reaparecen la creación y configuración!
   secondaryAudio = new Audio(selectedSecondaryFile);
   secondaryAudio.volume = parseFloat(secondaryVolumeSlider.value);
 
+  // Metadata para inicializar slider
   secondaryAudio.addEventListener('loadedmetadata', () => {
     secondaryTimeSlider.max = secondaryAudio.duration;
+    secondaryTimeSlider.value = 0;
     secondaryTimeDisplay.textContent = `0:00 / ${formatTime(secondaryAudio.duration)}`;
   });
 
+  // Actualización de slider salvo que estemos draggeando
   secondaryAudio.addEventListener('timeupdate', () => {
-    secondaryTimeSlider.value = secondaryAudio.currentTime;
-    secondaryTimeDisplay.textContent = `${formatTime(secondaryAudio.currentTime)} / ${formatTime(secondaryAudio.duration)}`;
+    if (!isSeekingSecondary) {
+      secondaryTimeSlider.value = secondaryAudio.currentTime;
+      secondaryTimeDisplay.textContent = 
+        `${formatTime(secondaryAudio.currentTime)} / ${formatTime(secondaryAudio.duration)}`;
+    }
   });
 
   secondaryAudio.play();
+});
+
+// Cuando el usuario empieza a arrastrar:
+secondaryTimeSlider.addEventListener('mousedown', () => {
+  isSeekingSecondary = true;
+});
+
+// Mientras arrastra, actualizamos la vista previa:
+secondaryTimeSlider.addEventListener('input', () => {
+  const t = parseFloat(secondaryTimeSlider.value);
+  secondaryTimeDisplay.textContent = `${formatTime(t)} / ${formatTime(secondaryTimeSlider.max)}`;
+});
+
+// Al soltar, hacemos el seek y reactivamos updates:
+secondaryTimeSlider.addEventListener('mouseup', () => {
+  const t = parseFloat(secondaryTimeSlider.value);
+  if (secondaryAudio) {
+    secondaryAudio.currentTime = t;
+  }
+  secondaryTimeDisplay.textContent = `${formatTime(t)} / ${formatTime(secondaryTimeSlider.max)}`;
+  isSeekingSecondary = false;
 });
 
 stopSecondaryBtn.addEventListener('click', () => {
