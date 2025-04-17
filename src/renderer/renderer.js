@@ -44,6 +44,7 @@ const removeSelectedBtn = document.getElementById('removeSelected');
 
 const togglePlayBtn = document.getElementById('togglePlay');
 const nextBtn = document.getElementById('next');
+const nextAndPlayBtn = document.getElementById('nextAndPlay');
 const finalizeBtn = document.getElementById('finalize');
 
 const timeSlider = document.getElementById('timeSlider');
@@ -705,6 +706,30 @@ nextBtn.addEventListener('click', () => {
     }, DOUBLE_CLICK_DELAY);
   }
 });
+
+// Boton de "Siguiente y reproducir"
+nextAndPlayBtn.addEventListener('click', () => {
+  // Solo si hay un siguiente elemento
+  if (primaryLibrary.length > 0 && currentIndex < primaryLibrary.length - 1) {
+    currentIndex++;
+    // Enviar directamente a reproduccion (no solo preview)
+    ipcRenderer.send('play-video', primaryLibrary[currentIndex]);
+    
+    // Actualizar estado interno
+    currentPlayingIndex = currentIndex;
+    isPlaying = true;
+    videoStarted = true;
+    
+    // Cambiar icono de Play/Pausa a “Pausa”
+    togglePlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    
+    // Refrescar UI
+    renderMainSequence();
+  } else {
+    alert('No hay más elementos en la secuencia.');
+  }
+});
+
 
 // Botón "Finalizar"
 finalizeBtn.addEventListener('click', () => {
