@@ -6,7 +6,7 @@ let videoElement = document.getElementById('videoPlayer');
 let imageViewer  = document.getElementById('imageViewer');
 let overlayDiv   = document.getElementById('overlay');
 let isPaused     = false;
-let overlaySettings = { color: null, image: null };
+let overlaySettings = { type: null, color: null, image: null };
 
 ipcRenderer.on('set-overlay', (event, settings) => {
   // Actualiza ajustes de overlay (color o imagen)
@@ -43,18 +43,11 @@ ipcRenderer.on("pause-video", () => {
     videoElement.pause();
     // Mostrar overlay completo al pausar
     overlayDiv.style.display = "block";
-    if (overlaySettings.image) {
-        // convertir ruta de archivo a URL válida
-        const imgUrl = pathToFileURL(overlaySettings.image).href;
-        overlayDiv.style.backgroundImage   = `url("${imgUrl}")`;
-        overlayDiv.style.backgroundColor   = "transparent";
-      } else if (overlaySettings.color) {
-        overlayDiv.style.backgroundImage   = "";
-        overlayDiv.style.backgroundColor   = overlaySettings.color;
-      }
     overlayDiv.style.opacity = "1"; // siempre opacidad total
   }
   isPaused = true;
+
+  applyOverlay();
 });
 
 ipcRenderer.on('resume-video', () => {
@@ -84,17 +77,8 @@ ipcRenderer.on("load-video-preview", (event, mediaPath) => {
     videoElement.pause();
     videoElement.currentTime = 0;
 
-    // Mostrar overlay en preview
-    overlayDiv.style.display = "block";
-    if (overlaySettings.image) {
-      const imgUrl = pathToFileURL(overlaySettings.image).href;
-      overlayDiv.style.backgroundImage = `url("${imgUrl}")`;
-      overlayDiv.style.backgroundColor = "transparent";
-    } else if (overlaySettings.color) {
-      overlayDiv.style.backgroundImage = "";
-      overlayDiv.style.backgroundColor = overlaySettings.color;
-    }
     overlayDiv.style.opacity = "1";
+    applyOverlay();
   }
 });
 
@@ -124,3 +108,31 @@ videoElement.addEventListener('timeupdate', () => {
 videoElement.addEventListener('ended', () => {
   ipcRenderer.send('video-ended');
 });
+
+function applyOverlay() {
+  const o = overlaySettings;
+  // Si pedimos imagen pero no hay ruta → nada
+  if (o.type === "image") {
+    if (o.image) {
+      overlayDiv.style.backgroundImage = `url("${pathToFileURL(o.image).href}")`;
+      overlayDiv.style.backgroundColor = "transparent";
+      overlayDiv.style.display = "block";
+    } else {
+      overlayDiv.style.display = "none";
+    }
+    return;
+  }
+  // Si pedimos color pero no hay color → nada
+  if (o.type === "color") {
+    if (o.color) {
+      overlayDiv.style.backgroundImage = "";
+      overlayDiv.style.backgroundColor = o.color;
+      overlayDiv.style.display = "block";
+    } else {
+      overlayDiv.style.display = "none";
+    }
+    return;
+  }
+  // fallback: ocultamos
+  overlayDiv.style.display = "none";
+}
