@@ -1,17 +1,62 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Reproductor Principal</title>
   <style>
-    body { margin: 0; background: black; overflow: hidden; }
-    video, img { width: 100%; height: 100%; object-fit: contain; }
-    img { display: none; }
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      position: relative;
+    }
+
+    video,
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #imageViewer {
+      display: none;
+    }
+
+    #overlay {
+      /* Cubrir toda la pantalla incluso si el video es más pequeño */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      display: none;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      background-color: transparent;
+      z-index: 9999;
+      opacity: 1;
+    }
+
+    /* Asegurar que el video esté debajo del overlay */
+    video {
+      position: relative;
+      z-index: 1;
+    }
+
+    img {
+      display: none;
+    }
   </style>
 </head>
+
 <body>
   <video id="videoPlayer"></video>
   <img id="imageViewer" />
+  <div id="overlay"></div>
   <script src="playback.js"></script>
 </body>
+
 </html>

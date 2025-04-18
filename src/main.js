@@ -269,3 +269,10 @@ ipcMain.on('close-playback-windows', () => {
   closeAllWindows();
 });
 //#endregion
+
+// Recibe configuración de overlay desde renderer y la reenvía al playback
+ipcMain.on('set-overlay', (event, overlay) => {
+  if (playbackWindow && !playbackWindow.isDestroyed()) {
+    playbackWindow.webContents.send('set-overlay', overlay);
+  }
+});

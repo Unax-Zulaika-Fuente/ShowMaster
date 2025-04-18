@@ -9,6 +9,8 @@ let startButtonClickTimeout = null;
 let nextButtonClickTimeout = null;
 
 let primaryLibrary = [];         // Archivos de la secuencia principal
+let overlayColor     = null;
+let overlayImagePath = null;
 let secondaryLibrary = [];       // Archivos de la secuencia secundaria
 let currentIndex = 0;            // Índice del archivo activo en la secuencia principal
 let isPlaying = false;           // Estado de reproducción principal (play/pausa)
@@ -48,6 +50,12 @@ const loadProjectBtn = document.getElementById('loadProject');
 const saveProjectBtn = document.getElementById('saveProject');
 const addFilesBtn = document.getElementById('addFiles');
 const removeSelectedBtn = document.getElementById('removeSelected');
+const overlayColorPicker = document.getElementById('overlayColorPicker');
+const overlayImageInput  = document.getElementById('overlayImageInput');
+const overlayTypeColor  = document.getElementById('overlayTypeColor');
+const overlayTypeImage  = document.getElementById('overlayTypeImage');
+const colorControlSpan  = document.getElementById('colorControl');
+const imageControlSpan  = document.getElementById('imageControl');
 
 const togglePlayBtn = document.getElementById('togglePlay');
 const nextBtn = document.getElementById('next');
@@ -1227,3 +1235,57 @@ stopAllInstantBtn.addEventListener('click', () => {
 //#region Inicialización de la Interfaz
 updateLibraryUI();
 //#endregion
+
+function updateOverlayInputs() {
+  if (overlayTypeColor.checked) {
+    // Mostrar solo color picker
+    colorControlSpan.style.display = '';
+    imageControlSpan.style.display = 'none';
+  } else {
+    // Mostrar solo file input
+    colorControlSpan.style.display = 'none';
+    imageControlSpan.style.display = '';
+  }
+}
+
+function sendCurrentOverlay() {
+  if (overlayTypeColor.checked) {
+    overlayColor = overlayColorPicker.value;
+    overlayImagePath = null;
+    ipcRenderer.send("set-overlay", { color: overlayColor, image: null });
+    } else {
+        const file = overlayImageInput.files[0];
+        if (file && file.path) {
+          // Si hay imagen, la usamos
+          overlayImagePath = file.path;
+          overlayColor = null;
+          ipcRenderer.send('set-overlay', { color: null, image: overlayImagePath });
+        } else {
+          // Si no hay imagen seleccionada, forzamos transparencia
+          overlayImagePath = null;
+          overlayColor = 'transparent';
+          ipcRenderer.send('set-overlay', { color: 'transparent', image: null });
+        }
+  }
+}
+
+// Al cambiar tipo, actualizo inputs y reenvío
+overlayTypeColor.addEventListener("change", () => {
+  updateOverlayInputs();
+  sendCurrentOverlay();
+});
+overlayTypeImage.addEventListener("change", () => {
+  updateOverlayInputs();
+  sendCurrentOverlay();
+});
+
+overlayColorPicker.addEventListener("input", () => {
+  if (overlayTypeColor.checked) sendCurrentOverlay();
+});
+
+overlayImageInput.addEventListener("change", () => {
+  if (overlayTypeImage.checked) sendCurrentOverlay();
+});
+
+// Iniciar estado correcto
+updateOverlayInputs();

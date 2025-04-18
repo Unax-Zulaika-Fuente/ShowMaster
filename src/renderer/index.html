@@ -24,9 +24,21 @@
         <!-- Columna Izquierda: Secuencia Principal -->
         <div id="mainColumn">
           <h3>Secuencia Principal</h3>
-          <div>
+          <div class="file-controls">
             <button id="addFiles">Agregar Archivos (Principal)</button>
             <button id="removeSelected">Eliminar Seleccionado</button>
+            <!-- Controles de overlay en pausa -->
+            <label><input type="radio" name="overlayType" id="overlayTypeColor" value="color" checked> Usar color</label>
+            <label><input type="radio" name="overlayType" id="overlayTypeImage" value="image"> Usar imagen</label>
+            <!-- Controles de overlay -->
+            <span id="colorControl">
+              <label for="overlayColorPicker">Color de pausa:</label>
+              <input type="color" id="overlayColorPicker" value="#000000" />
+            </span>
+            <span id="imageControl" style="display:none">
+              <label for="overlayImageInput">Imagen de pausa:</label>
+              <input type="file" id="overlayImageInput" accept="image/*" />
+            </span>
           </div>
           <ul id="sequenceList"></ul>
           <!-- Controles para reproducción principal -->
