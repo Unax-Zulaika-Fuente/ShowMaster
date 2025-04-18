@@ -126,7 +126,13 @@ function closeAllWindows() {
 ipcMain.handle('open-file-dialog', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile', 'multiSelections'],
-    filters: [{ name: 'Media Files', extensions: ['mp4', 'mp3', 'avi', 'mkv', 'wav'] }]
+    filters: [{
+      name: 'Media & Image Files',
+      extensions: [
+        'mp4', 'mp3', 'avi', 'mkv', 'wav',
+        'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'
+      ]
+    }]
   });
   return result.filePaths;
 });
@@ -172,7 +178,6 @@ ipcMain.handle('confirm-new-project', async () => {
   });
   return result.response; // 0: Guardar y Nuevo, 1: Nuevo sin guardar, 2: Cancelar
 });
-
 //#endregion
 
 //#region ▶️ Control de reproducción principal
@@ -259,3 +264,23 @@ ipcMain.on('stop-secondary', () => {
 });
 //#endregion
 
+//#region NUEVO: Cerrar reproductores al crear un nuevo proyecto
+ipcMain.on('close-playback-windows', () => {
+  closeAllWindows();
+});
+//#endregion
+
+// Recibe configuración de overlay desde renderer y la reenvía al playback
+ipcMain.on('set-overlay', (event, overlay) => {
+  // 1) Si no hay playbackWindow (o está destruida), la creamos
+  if (!playbackWindow || playbackWindow.isDestroyed()) {
+    createPlaybackWindow();
+    // esperamos a que termine de cargar para enviarle el overlay
+    playbackWindow.webContents.once('did-finish-load', () => {
+      playbackWindow.webContents.send('set-overlay', overlay);
+    });
+  } else {
+    // 2) Si ya estaba activa, se lo mandamos directamente
+    playbackWindow.webContents.send('set-overlay', overlay);
+  }
+});

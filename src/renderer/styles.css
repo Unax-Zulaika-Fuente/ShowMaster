@@ -3,6 +3,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+    color: #333;
   }
   
   /* Barra superior */
@@ -26,10 +27,27 @@ html, body {
   .menu-bar .menu-item:hover {
     text-decoration: underline;
   }
+
+  .hidden {
+    display: none !important;
+  }  
+
+  .view-toggle {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 1.1rem;
+    background: #fff;
+    color: #000;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
   
   /* Contenedor principal */
   .container {
     padding: 20px;
+    padding-top: 0px;
     margin-top: 50px; /* Espacio para la barra superior */
     min-height: calc(100% - 50px);
   }
@@ -44,6 +62,7 @@ html, body {
     flex: 1;
     background: #fff;
     padding: 10px;
+    padding-top: 0px;
     display: flex;
     flex-direction: column;
     height: 80vh;
@@ -172,10 +191,14 @@ html, body {
     align-items: center;
     cursor: pointer;
   }
+
   .volume-icon {
     font-size: 1.5rem;
-    color: #333;
+    width: 2rem;
+    display: inline-block;
+    text-align: center;
   }
+  
   .volume-slider {
     position: absolute;
     top: 50%;
@@ -194,6 +217,84 @@ html, body {
     opacity: 1;
   }
   
+  /* styles.css */
+.global-mute-toggle {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+}
+
+.instant-column {
+  flex: 1;
+  background: #fff;
+  padding: 10px;
+  padding-top: 0px;
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  border-left: 1px solid #ccc;
+}
+
+.deck-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.deck-controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.deck-controls button.active {
+  color: #007bff;
+}
+
+.instant-deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.instant-button {
+  width: 100%;
+  height: 60px;
+  background: #fafafa;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.instant-button.instant-delete-mode {
+  background: #ffe5e5;
+}
+
+.instant-button.instant-edit-mode {
+  background: #e5f0ff;
+}
+
+.instant-button i {
+  font-size: 1.5rem;
+}
+
+.instant-button.instant-emoji-mode {
+  background: #fff4e5;
+  border-color: #ffbb33;
+}
+.deck-controls button.active.emoji {
+  color: #ffbb33;
+}
+
   /* Volumen slider inputs para personalizar apariencia */
   input[type=range] {
     -webkit-appearance: none;

@@ -1,93 +1,190 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>APP - Magia Alain Zulaika Fuente</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
-</head>
-<body>
-  <!-- Barra superior fija -->
-  <div class="menu-bar">
-    <span id="newProject" class="menu-item">Nuevo Proyecto</span>
-    <span id="loadProject" class="menu-item">Cargar Proyecto</span>
-    <span id="saveProject" class="menu-item">Guardar Proyecto</span>
-  </div>
-  
-  <div class="container">
-    <div id="columnsContainer">
-      <!-- Columna Izquierda: Secuencia Principal -->
-      <div id="mainColumn">
-        <h3>Secuencia Principal</h3>
-        <div>
-          <button id="addFiles">Agregar Archivos (Principal)</button>
-          <button id="removeSelected">Eliminar Seleccionado</button>
-        </div>
-        <ul id="sequenceList"></ul>
-        <!-- Controles para reproducción principal -->
-        <div class="playback-controls">
-          <!-- Fila superior: Barra de tiempo -->
-          <div class="time-container">
-            <div class="slider-container">
-              <input type="range" id="timeSlider" value="0" min="0" max="100" step="0.1">
-              <span id="timeDisplay">0:00 / 0:00</span>
-            </div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>APP - Magia Alain Zulaika Fuente</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <!-- Barra superior fija -->
+    <div class="menu-bar">
+      <span id="newProject" class="menu-item">Nuevo Proyecto</span>
+      <span id="loadProject" class="menu-item">Cargar Proyecto</span>
+      <span id="saveProject" class="menu-item">Guardar Proyecto</span>
+      <span id="viewModeToggle" class="menu-item">Visualizar modo Espectáculo</span>
+    </div>
+
+    <div class="container">
+      <div id="columnsContainer">
+        <!-- Columna Izquierda: Secuencia Principal -->
+        <div id="mainColumn">
+          <h3>Secuencia Principal</h3>
+          <div class="file-controls">
+            <button id="addFiles">Agregar Archivos (Principal)</button>
+            <button id="removeSelected">Eliminar Seleccionado</button>
+            <!-- Controles de overlay en pausa -->
+            <label><input type="radio" name="overlayType" id="overlayTypeColor" value="color" checked> Usar color</label>
+            <label><input type="radio" name="overlayType" id="overlayTypeImage" value="image"> Usar imagen</label>
+            <!-- Controles de overlay -->
+            <span id="colorControl">
+              <label for="overlayColorPicker">Color de pausa:</label>
+              <input type="color" id="overlayColorPicker" value="#000000" />
+            </span>
+            <span id="imageControl" style="display:none">
+                <button id="overlayImageBtn">Seleccionar imagen</button>
+                <span id="overlayImageLabel" style="margin-left:8px">Ninguna</span>
+            </span>
           </div>
-          <!-- Fila inferior: Botones de interacción y control de volumen -->
-          <div class="button-volume-row">
-            <div class="volume-container">
-              <div class="volume-control">
-                <!-- Se le asigna id al ícono de volumen principal -->
-                <i id="mainVolumeIcon" class="fa-solid fa-volume-high volume-icon"></i>
-                <input type="range" id="mainVolumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="1">
+          <ul id="sequenceList"></ul>
+          <!-- Controles para reproducción principal -->
+          <div class="playback-controls">
+            <!-- Fila superior: Barra de tiempo -->
+            <div class="time-container">
+              <div class="slider-container">
+                <input
+                  type="range"
+                  id="timeSlider"
+                  value="0"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                />
+                <span id="timeDisplay">0:00 / 0:00</span>
               </div>
             </div>
-            <div class="control-buttons">
-              <button id="startOrPrev" title="Inicio/Anterior"><i class="fa-solid fa-backward"></i></button>
-              <button id="togglePlay" title="Play/Pausa"><i class="fa-solid fa-play"></i></button>
-              <button id="next" title="Final/Siguiente"><i class="fa-solid fa-forward"></i></button>
-              <button id="finalize" title="Finalizar"><i class="fa-solid fa-stop"></i></button>
-            </div>
-          </div>
-        </div>   
-      </div>
-      
-      <!-- Columna Derecha: Media para Secundaria -->
-      <div id="secondaryColumn">
-        <h3>Efectos de sonido</h3>
-        <div>
-          <button id="addFilesSecondary">Agregar Archivos (Secundaria)</button>
-          <button id="removeSecondarySelected">Eliminar Seleccionado (Secundaria)</button>
-        </div>
-        <ul id="secondaryMediaList"></ul>
-        <!-- Controles para reproducción secundaria -->
-        <div class="playback-controls">
-          <!-- Fila superior: Barra de tiempo -->
-          <div class="time-container">
-            <div class="slider-container">
-              <input type="range" id="secondaryTimeSlider" value="0" min="0" max="100" step="0.1">
-              <span id="secondaryTimeDisplay">0:00 / 0:00</span>
-            </div>
-          </div>
-          <!-- Fila inferior: Botones de interacción y control de volumen -->
-          <div class="button-volume-row">
-            <div class="volume-container">
-              <div class="volume-control">
-                <!-- Se le asigna id al ícono de volumen secundaria -->
-                <i id="secondaryVolumeIcon" class="fa-solid fa-volume-high volume-icon"></i>
-                <input type="range" id="secondaryVolumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="1">
+            <!-- Fila inferior: Botones de interacción y control de volumen -->
+            <div class="button-volume-row">
+              <div class="volume-container">
+                <div class="volume-control">
+                  <!-- Se le asigna id al ícono de volumen principal -->
+                  <i
+                    id="mainVolumeIcon"
+                    class="fa-solid fa-volume-high volume-icon"
+                  ></i>
+                  <input
+                    type="range"
+                    id="mainVolumeSlider"
+                    class="volume-slider"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="1"
+                  />
+                </div>
+              </div>
+              <div class="control-buttons">
+                <button id="startOrPrev" title="Inicio/Anterior">
+                  <i class="fa-solid fa-backward"></i>
+                </button>
+                <button id="togglePlay" title="Play/Pausa">
+                  <i class="fa-solid fa-play"></i>
+                </button>
+                <button id="next" title="Final/Siguiente">
+                  <i class="fa-solid fa-forward"></i>
+                </button>
+                <button id="nextAndPlay" title="Siguiente y Reproducir">
+                  <i class="fa-solid fa-forward-step"></i>
+                </button>
+                <button id="finalize" title="Finalizar">
+                  <i class="fa-solid fa-stop"></i>
+                </button>
               </div>
             </div>
-            <div class="control-buttons">
-              <button id="playSecondary" title="Reproducir Secundaria"><i class="fa-solid fa-play"></i></button>
-              <button id="stopSecondary" title="Detener Secundaria"><i class="fa-solid fa-stop"></i></button>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Media para Secundaria -->
+        <div id="secondaryColumn">
+          <h3>Efectos de sonido</h3>
+          <div>
+            <button id="addFilesSecondary">
+              Agregar Archivos (Secundaria)
+            </button>
+            <button id="removeSecondarySelected">
+              Eliminar Seleccionado (Secundaria)
+            </button>
+          </div>
+          <label class="global-mute-toggle">
+            <input type="checkbox" id="toggleAllSecondary" />
+            Mutear sonido de secuencia principal en todos
+          </label>
+          <ul id="secondaryMediaList"></ul>
+          <!-- Controles para reproducción secundaria -->
+          <div class="playback-controls">
+            <!-- Fila superior: Barra de tiempo -->
+            <div class="time-container">
+              <div class="slider-container">
+                <input
+                  type="range"
+                  id="secondaryTimeSlider"
+                  value="0"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                />
+                <span id="secondaryTimeDisplay">0:00 / 0:00</span>
+              </div>
+            </div>
+            <!-- Fila inferior: Botones de interacción y control de volumen -->
+            <div class="button-volume-row">
+              <div class="volume-container">
+                <div class="volume-control">
+                  <!-- Se le asigna id al ícono de volumen secundaria -->
+                  <i
+                    id="secondaryVolumeIcon"
+                    class="fa-solid fa-volume-high volume-icon"
+                  ></i>
+                  <input
+                    type="range"
+                    id="secondaryVolumeSlider"
+                    class="volume-slider"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="1"
+                  />
+                </div>
+              </div>
+              <div class="control-buttons">
+                <button id="playSecondary" title="Reproducir Secundaria">
+                  <i class="fa-solid fa-play"></i>
+                </button>
+                <button id="stopSecondary" title="Detener Secundaria">
+                  <i class="fa-solid fa-stop"></i>
+                </button>
+              </div>
             </div>
           </div>
-        </div>   
+        </div>
+        <div id="instantColumn" class="instant-column">
+          <h3>Efectos Instantáneos</h3>
+          <div class="deck-controls">
+            <button id="addInstant" title="Añadir botón">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button id="deleteInstantToggle" title="Eliminar botones">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+            <button id="editInstantToggle" title="Reemplazar sonido">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button id="emojiInstantToggle" title="Cambiar icono">
+              <i class="fa-regular fa-face-smile"></i>
+            </button>
+            <button id="stopAllInstant" title="Detener todos los instantáneos">
+              <i class="fa-solid fa-stop"></i>
+            </button>
+          </div>
+          <div id="instantDeck" class="instant-deck"></div>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <script src="renderer.js"></script>
-</body>
+
+    <script src="renderer.js"></script>
+  </body>
 </html>
