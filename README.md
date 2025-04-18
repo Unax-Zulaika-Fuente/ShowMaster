@@ -1,17 +1,19 @@
 # 🎭 ShowMaster
 ### 🪄 Secuenciador de Espectáculos diseñado para el mago Alain Zulaika Fuente, adaptable para cualquier técnico o artista.
 
-ShowMaster es una aplicación de escritorio que permite **organizar, sincronizar y gestionar secuencias de audio y video** en espectáculos.  
+ShowMaster es una aplicación de escritorio basada en Electron que permite **organizar, sincronizar y gestionar secuencias de audio y video** en espectáculos en tiempo real.  
 Creado originalmente para los shows del **mago Alain Zulaika Fuente**, también es útil para cualquier técnico o artista que necesite controlar la reproducción de medios en tiempo real.
 
 ---
 
 ## 🚀 Características principales
-✅ **Reproducción secuencial** de videos y audios en pantalla secundaria.  
-✅ **Interfaz intuitiva** para organizar pistas de medios.  
-✅ **Control total** de reproducción: Play/Pausa, Siguiente, Volumen y más.  
-✅ **Línea de tiempo secundaria** para efectos de sonido independientes.  
-✅ **Guardado y carga de proyectos** para espectáculos recurrentes.  
+✅ Reproducción secuencial de vídeos, audios e imágenes con control avanzado (Play/Pausa, Anterior, Siguiente, Siguiente y reproducir, Volumen...).  
+✅ **Interfaz intuitiva con Drag & Drop y flechas** para organizar fácilmente tus pistas multimedia.  
+✅ **Línea de tiempo secundaria** independiente para efectos de sonido, con opciones de silenciamiento automático.  
+✅ **Efectos instantáneos personalizables** accesibles mediante botones rápidos con iconos emoji.  
+✅ **Modo Espectáculo** para presentaciones en vivo, con una interfaz limpia y simplificada.  
+✅ **Previsualización rápida** de vídeos para verificar contenido sin interrumpir la reproducción principal.  
+✅ **Guardado y carga de proyectos** para reutilizar configuraciones en espectáculos recurrentes.  
 
 ---
 
@@ -36,6 +38,10 @@ npm install
 npm start
 ```
 
+### 🔹 **Requisitos recomendados:**
+- Node.js v22.14 o superior
+- Electron v25 o superior
+
 ---
 
 ## 📦 Generar un ejecutable (Windows/Linux/Mac)
@@ -48,10 +54,11 @@ Esto generará un archivo instalador en la carpeta dist/.
 ---
 
 ## 🎮 Uso de la aplicación
-1. Cargar archivos de audio y video en la secuencia principal o secundaria.
-2. Ordenar y gestionar las pistas según el espectáculo.
-3. Reproducir el contenido en una pantalla secundaria con total control.
-4. Guardar proyectos para usarlos en futuras funciones.
+1. Carga archivos de audio, vídeo e imágenes en la secuencia principal, secundaria o efectos instantáneos.
+2. Organiza y reordena las pistas fácilmente mediante Drag & Drop y/o uso de flechas según tu espectáculo.
+3. Reproduce contenido en una pantalla secundaria manteniendo control total durante el espectáculo.
+4. Personaliza efectos instantáneos con botones rápidos y emojis.
+5. Guarda tus configuraciones en proyectos para utilizarlas en futuras actuaciones.
 
 ⚠ **IMPORTANTE**:
 
@@ -60,6 +67,22 @@ Cuando guardas un proyecto, **ShowMaster almacena las rutas de los archivos de a
 **Si mueves o eliminas los archivos después de guardar el proyecto, ShowMaster no podrá encontrarlos y no se cargarán correctamente.**
 
 Para evitar problemas, mantén los archivos en su ubicación original o vuelve a cargarlos en la aplicación si cambian de sitio.
+
+---
+
+## 🔒 **Seguridad y Buenas Prácticas**
+- Mantén tus archivos multimedia en ubicaciones estables y realiza copias de seguridad regularmente.
+- Descarga y actualiza siempre la aplicación desde fuentes confiables (repositorio oficial).
+- Mantén actualizadas las dependencias para evitar problemas de seguridad o rendimiento.
+
+---
+
+## 🚧 **Problemas conocidos o preguntas frecuentes**
+
+- ¿Por qué mis vídeos no cargan tras mover los archivos originales?
+  - ShowMaster guarda rutas absolutas. Si cambias la ubicación de los archivos, debes recargarlos manualmente.
+- ¿Cuántas pantallas necesito para utilizar correctamente ShowMaster?
+  - ShowMaster está diseñado para utilizarse con dos pantallas simultáneas. En la pantalla principal tendrás acceso completo a todos los controles de la aplicación, mientras que en la pantalla secundaria se reproducirán los vídeos y contenidos multimedia en pantalla completa y sin distracciones.
 
 ---
 
