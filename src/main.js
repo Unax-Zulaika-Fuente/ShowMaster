@@ -272,7 +272,15 @@ ipcMain.on('close-playback-windows', () => {
 
 // Recibe configuración de overlay desde renderer y la reenvía al playback
 ipcMain.on('set-overlay', (event, overlay) => {
-  if (playbackWindow && !playbackWindow.isDestroyed()) {
+  // 1) Si no hay playbackWindow (o está destruida), la creamos
+  if (!playbackWindow || playbackWindow.isDestroyed()) {
+    createPlaybackWindow();
+    // esperamos a que termine de cargar para enviarle el overlay
+    playbackWindow.webContents.once('did-finish-load', () => {
+      playbackWindow.webContents.send('set-overlay', overlay);
+    });
+  } else {
+    // 2) Si ya estaba activa, se lo mandamos directamente
     playbackWindow.webContents.send('set-overlay', overlay);
   }
 });

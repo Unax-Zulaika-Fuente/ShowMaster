@@ -42,6 +42,8 @@ let instantAudioPlayers = [];
 //#endregion
 
 //#region Elementos del DOM
+const path = require('path');
+
 const sequenceList = document.getElementById('sequenceList');
 const secondaryMediaList = document.getElementById('secondaryMediaList');
 
@@ -51,7 +53,8 @@ const saveProjectBtn = document.getElementById('saveProject');
 const addFilesBtn = document.getElementById('addFiles');
 const removeSelectedBtn = document.getElementById('removeSelected');
 const overlayColorPicker = document.getElementById('overlayColorPicker');
-const overlayImageInput  = document.getElementById('overlayImageInput');
+const overlayImageBtn    = document.getElementById('overlayImageBtn');
+const overlayImageLabel  = document.getElementById('overlayImageLabel');
 const overlayTypeColor  = document.getElementById('overlayTypeColor');
 const overlayTypeImage  = document.getElementById('overlayTypeImage');
 const colorControlSpan  = document.getElementById('colorControl');
@@ -515,7 +518,10 @@ newProjectBtn.addEventListener('click', async () => {
       primaryLibrary,
       secondaryLibrary,
       secondaryMuteFlags,
-      instantSounds
+      instantSounds,
+      overlayType: overlayTypeColor.checked ? 'color' : 'image',
+      overlayColor,
+      overlayImagePath
     };
     const result = await ipcRenderer.invoke('save-sequence', projectData);
     if (result.success) {
@@ -533,6 +539,16 @@ newProjectBtn.addEventListener('click', async () => {
  * Reinicia el proyecto.
  */
 function resetProject() {
+    // 0) Reset del overlay  
+    overlayTypeColor.checked     = true;
+    overlayTypeImage.checked     = false;
+    overlayColor                 = '#000000';
+    overlayImagePath             = null;
+    overlayColorPicker.value     = overlayColor;
+    overlayImageLabel.textContent = 'Ninguna';
+    updateOverlayInputs();
+    sendCurrentOverlay();
+
   // 1. Cierra reproductores
   ipcRenderer.send('close-playback-windows');
 
@@ -579,17 +595,46 @@ function resetProject() {
 
 loadProjectBtn.addEventListener('click', async () => {
   const loadedProject = await ipcRenderer.invoke('load-sequence');
-  if (loadedProject && typeof loadedProject === 'object') {
-    primaryLibrary       = loadedProject.primaryLibrary       || [];
-    secondaryLibrary     = loadedProject.secondaryLibrary     || [];
-    secondaryMuteFlags   = loadedProject.secondaryMuteFlags   || {};
-    currentIndex = 0;
-    isPlaying = false;
-    togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    instantSounds = loadedProject.instantSounds || [];
-    modeInstant   = null;
-    updateLibraryUI();
+  if (!loadedProject || typeof loadedProject !== 'object') return;
+
+  // 1) Resto de restauración de librerías...
+  primaryLibrary       = loadedProject.primaryLibrary       || [];
+  secondaryLibrary     = loadedProject.secondaryLibrary     || [];
+  secondaryMuteFlags   = loadedProject.secondaryMuteFlags   || {};
+  instantSounds        = loadedProject.instantSounds        || [];
+
+  // 2) Estado del overlay (completo)
+  const { overlayType, overlayColor: c, overlayImagePath: img } = loadedProject;
+
+  overlayTypeColor.checked = overlayType === 'color';
+  overlayTypeImage.checked = overlayType === 'image';
+
+  if (loadedProject.overlayType === 'image') {
+    overlayTypeImage.checked = true;
+    overlayImagePath = loadedProject.overlayImagePath;
+    overlayImageLabel.textContent = path.basename(overlayImagePath);
+    // Resetea color para no reenviar algo viejo
+    overlayColor = '#000000';
+    overlayColorPicker.value = overlayColor;
+  } else {
+    overlayTypeColor.checked = true;
+    overlayColor = loadedProject.overlayColor || '#000000';
+    // **ÉSTA línea** sincroniza el input con tu variable
+    overlayColorPicker.value = overlayColor;
+    // Asegúrate de limpiar cualquier ruta antigua de imagen
+    overlayImagePath = null;
+    overlayImageLabel.textContent = 'Ninguna';
   }
+
+  updateOverlayInputs();
+  sendCurrentOverlay();
+
+  // 3) Reset de la UI de reproducción
+  currentIndex = 0;
+  isPlaying    = false;
+  togglePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+
+  updateLibraryUI();
 });
 
 saveProjectBtn.addEventListener('click', async () => {
@@ -597,7 +642,10 @@ saveProjectBtn.addEventListener('click', async () => {
     primaryLibrary,
     secondaryLibrary,
     secondaryMuteFlags,
-    instantSounds
+    instantSounds,
+    overlayType: overlayTypeColor.checked ? 'color' : 'image',
+    overlayColor,
+    overlayImagePath
   };
   const result = await ipcRenderer.invoke('save-sequence', projectData);
   if (result.success) {
@@ -1254,19 +1302,9 @@ function sendCurrentOverlay() {
     overlayImagePath = null;
     ipcRenderer.send("set-overlay", { color: overlayColor, image: null });
     } else {
-        const file = overlayImageInput.files[0];
-        if (file && file.path) {
-          // Si hay imagen, la usamos
-          overlayImagePath = file.path;
-          overlayColor = null;
-          ipcRenderer.send('set-overlay', { color: null, image: overlayImagePath });
-        } else {
-          // Si no hay imagen seleccionada, forzamos transparencia
-          overlayImagePath = null;
-          overlayColor = 'transparent';
-          ipcRenderer.send('set-overlay', { color: 'transparent', image: null });
-        }
-  }
+      // Ya almacenamos overlayImagePath al pulsar el botón
+      ipcRenderer.send('set-overlay', { color: null, image: overlayImagePath });
+    }
 }
 
 // Al cambiar tipo, actualizo inputs y reenvío
@@ -1283,9 +1321,22 @@ overlayColorPicker.addEventListener("input", () => {
   if (overlayTypeColor.checked) sendCurrentOverlay();
 });
 
-overlayImageInput.addEventListener("change", () => {
-  if (overlayTypeImage.checked) sendCurrentOverlay();
-});
-
 // Iniciar estado correcto
 updateOverlayInputs();
+
+overlayImageBtn.addEventListener('click', async () => {
+  const files = await ipcRenderer.invoke('open-file-dialog');
+  if (!files || files.length === 0) return;
+  overlayImagePath = files[0];
+  overlayImageLabel.textContent = path.basename(overlayImagePath);
+  sendCurrentOverlay();
+});
+
+overlayTypeColor.addEventListener("change", () => {
+  updateOverlayInputs();
+  sendCurrentOverlay();
+});
+overlayTypeImage.addEventListener("change", () => {
+  updateOverlayInputs();
+  sendCurrentOverlay();
+});
