@@ -1297,14 +1297,10 @@ function updateOverlayInputs() {
 }
 
 function sendCurrentOverlay() {
-  if (overlayTypeColor.checked) {
-    overlayColor = overlayColorPicker.value;
-    overlayImagePath = null;
-    ipcRenderer.send("set-overlay", { color: overlayColor, image: null });
-    } else {
-      // Ya almacenamos overlayImagePath al pulsar el botón
-      ipcRenderer.send('set-overlay', { color: null, image: overlayImagePath });
-    }
+  const type = overlayTypeColor.checked ? "color" : "image";
+  const color = type === "color" ? overlayColorPicker.value : null;
+  const image = type === "image" ? overlayImagePath : null;
+  ipcRenderer.send("set-overlay", { type, color, image });
 }
 
 // Al cambiar tipo, actualizo inputs y reenvío
