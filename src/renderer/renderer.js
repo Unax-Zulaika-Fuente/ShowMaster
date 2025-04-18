@@ -128,8 +128,6 @@ function updateViewMode() {
   document
     .getElementById("removeSecondarySelected")
     .classList.toggle("hidden", isShowMode);
-  // Efectos instantaneos: solo 'stopAllInstant' en modo espectaculo
-  stopAllInstantBtn.classList.toggle("hidden", !isShowMode);
   document
     .querySelectorAll("#instantColumn .deck-controls button")
     .forEach((btn) => {
