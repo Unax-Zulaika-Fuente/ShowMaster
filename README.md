@@ -8,6 +8,11 @@ Creado originalmente para los shows del **mago Alain Zulaika Fuente**, también 
 
 ## 🚀 Características principales
 ✅ Reproducción secuencial de vídeos, audios e imágenes con control avanzado (Play/Pausa, Anterior, Siguiente, Siguiente y reproducir, Volumen...).  
+✅ **Soporte de formatos**:  
+  - Vídeo: `mp4`, `avi`, `mkv`  
+  - Audio: `mp3`, `wav`  
+  - Imagen: `png`, `jpg`, `jpeg`, `gif`, `bmp`, `webp`  
+
 ✅ **Interfaz intuitiva con Drag & Drop y flechas** para organizar fácilmente tus pistas multimedia.  
 ✅ **Línea de tiempo secundaria** independiente para efectos de sonido, con opciones de silenciamiento automático.  
 ✅ **Efectos instantáneos personalizables** accesibles mediante botones rápidos con iconos emoji.  
@@ -67,6 +72,14 @@ Cuando guardas un proyecto, **ShowMaster almacena las rutas de los archivos de a
 **Si mueves o eliminas los archivos después de guardar el proyecto, ShowMaster no podrá encontrarlos y no se cargarán correctamente.**
 
 Para evitar problemas, mantén los archivos en su ubicación original o vuelve a cargarlos en la aplicación si cambian de sitio.
+
+---
+
+## 📁 Tipos de archivos soportados
+ShowMaster puede trabajar con estos formatos de medios:
+- **Vídeo:** `mp4`, `avi`, `mkv`
+- **Audio:** `mp3`, `wav`
+- **Imagen:** `png`, `jpg`, `jpeg`, `gif`, `bmp`, `webp`
 
 ---
 
