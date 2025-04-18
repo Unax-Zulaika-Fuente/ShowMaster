@@ -38,7 +38,8 @@
   // Efectos de sonidos instantaneos
   let instantSounds = [];  
   let modeInstant = null;
-  let instantAudioPlayers = []; 
+  let instantAudioPlayers = [];
+  let instantGlobalVolume = 1;
   //#endregion
 
   //#region Elementos del DOM
@@ -89,6 +90,8 @@
   const editInstantToggleBtn   = document.getElementById('editInstantToggle');
   const emojiInstantToggleBtn = document.getElementById('emojiInstantToggle');
   const stopAllInstantBtn = document.getElementById('stopAllInstant');
+  const globalVolSlider = document.getElementById('instantGlobalVolume');
+  const instantVolumeIcon = document.getElementById('instantVolumeIcon');
   const instantDeck            = document.getElementById('instantDeck');
 
   let mainMuted = false;
@@ -1160,8 +1163,10 @@
         }
         // --- REPRODUCIR con el volumen en dB ajustado a lineal ---
         const audio = new Audio(entry.file);
-        const linearVol = Math.pow(10, (entry.volumeDb ?? 0) / 20);
-        audio.volume = Math.min(Math.max(linearVol, 0), 1);
+        // Guardamos cuánto dB tenía este entry para poder recalcular más tarde
+        audio._entryVolumeDb = entry.volumeDb ?? 0;
+        const baseVol = Math.pow(10, audio._entryVolumeDb / 20);
+        audio.volume = Math.min(Math.max(baseVol * instantGlobalVolume, 0), 1);
         audio.play();
         instantAudioPlayers.push(audio);
         audio.addEventListener('ended', () => {
@@ -1169,21 +1174,28 @@
         });
       });
   
-      // --- Input de volumen en dB ---
+      // --- Input numérico de volumen en dB individual ---
       const volInput = document.createElement('input');
       volInput.type = 'number';
       volInput.min = -60;
       volInput.max = 12;
       volInput.step = 1;
       volInput.value = entry.volumeDb ?? 0;
-      volInput.title = `${volInput.value} dB`;
+      volInput.title = `${volInput.value} dB`;
       volInput.className = 'instant-volume-input';
+
       volInput.addEventListener('change', () => {
         entry.volumeDb = parseFloat(volInput.value) || 0;
-        volInput.title = `${entry.volumeDb} dB`;
+        volInput.title = `${entry.volumeDb} dB`;
+
+        // Actualiza en tiempo real todas las instancias sonando
+        const newLinear = Math.pow(10, entry.volumeDb / 20) * instantGlobalVolume;
+        entry.players.forEach(a => {
+          a.volume = Math.min(Math.max(newLinear, 0), 1);
+        });
       });
-  
-      // Montamos todo en el contenedor
+
+      // Montaje
       container.appendChild(btn);
       container.appendChild(volInput);
       instantDeck.appendChild(container);
@@ -1193,9 +1205,9 @@
   // Añadir boton
   // Añade solo el slot vacio (icono +)
   addInstantBtn.addEventListener('click', () => {
-    instantSounds.push({ file: null, icon: null, volumeDb: 0 });
+    instantSounds.push({ file: null, icon: null, volumeDb: 0, players: [] });
     renderInstantDeck();
-  });
+  });  
 
   /**
    * Muestra un modal flotante para que el usuario escriba o pegue un emoji.
@@ -1356,3 +1368,39 @@
     updateOverlayInputs();
     sendCurrentOverlay();
   });
+
+  // Toggle mute cuando se clickea el icono
+  instantVolumeIcon.addEventListener('click', () => {
+    if (instantGlobalVolume > 0) {
+      instantGlobalVolume = 0;
+      globalVolSlider.value = 0;
+      instantVolumeIcon.classList.replace('fa-volume-high', 'fa-volume-mute');
+    } else {
+      instantGlobalVolume = parseFloat(globalVolSlider.getAttribute('data-previous')) || 1;
+      globalVolSlider.value = instantGlobalVolume;
+      instantVolumeIcon.classList.replace('fa-volume-mute', 'fa-volume-high');
+    }
+    // reajusta volúmenes en vuelo:
+    instantAudioPlayers.forEach(a => {
+      const base = Math.pow(10, (a._entryVolumeDb||0) / 20);
+      a.volume = Math.min(Math.max(base * instantGlobalVolume, 0), 1);
+    });
+  });
+  
+  // Guarda el valor previo al mutear
+  globalVolSlider.addEventListener('input', () => {
+    instantGlobalVolume = parseFloat(globalVolSlider.value);
+    globalVolSlider.setAttribute('data-previous', instantGlobalVolume);
+    // ajusta icono
+    if (instantGlobalVolume === 0) {
+      instantVolumeIcon.classList.replace('fa-volume-high', 'fa-volume-mute');
+    } else {
+      instantVolumeIcon.classList.replace('fa-volume-mute', 'fa-volume-high');
+    }
+    // reajusta todos los sonidos en vuelo
+    instantAudioPlayers.forEach(a => {
+      const base = Math.pow(10, (a._entryVolumeDb||0) / 20);
+      a.volume = Math.min(Math.max(base * instantGlobalVolume, 0), 1);
+    });
+  });
+  
