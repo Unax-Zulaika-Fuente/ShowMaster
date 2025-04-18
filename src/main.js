@@ -126,7 +126,13 @@ function closeAllWindows() {
 ipcMain.handle('open-file-dialog', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile', 'multiSelections'],
-    filters: [{ name: 'Media Files', extensions: ['mp4', 'mp3', 'avi', 'mkv', 'wav'] }]
+    filters: [{
+      name: 'Media & Image Files',
+      extensions: [
+        'mp4', 'mp3', 'avi', 'mkv', 'wav',
+        'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'
+      ]
+    }]
   });
   return result.filePaths;
 });

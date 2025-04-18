@@ -5,11 +5,13 @@
   <title>Reproductor Principal</title>
   <style>
     body { margin: 0; background: black; overflow: hidden; }
-    video { width: 100%; height: 100%; }
+    video, img { width: 100%; height: 100%; object-fit: contain; }
+    img { display: none; }
   </style>
 </head>
 <body>
   <video id="videoPlayer"></video>
+  <img id="imageViewer" />
   <script src="playback.js"></script>
 </body>
 </html>
