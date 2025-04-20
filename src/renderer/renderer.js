@@ -153,13 +153,21 @@
       .classList.toggle('hidden', isShowMode);
     document.querySelector('.global-mute-toggle')
       .classList.toggle('hidden', isShowMode);
-    document
-      .querySelectorAll("#instantColumn .deck-controls button")
-      .forEach((btn) => {
-        if (btn !== stopAllInstantBtn) {
-          btn.classList.toggle("hidden", isShowMode);
-        }
-      });
+
+document.querySelectorAll('label[for^="overlayType"], #colorControl, #imageControl')
+    .forEach(el => el.classList.toggle('hidden', isShowMode));
+
+  document.querySelector('.global-mute-toggle')
+    .classList.toggle('hidden', isShowMode);
+
+  document.querySelectorAll('#instantColumn .deck-controls button')
+    .forEach(btn => {
+      if (btn !== stopAllInstantBtn) btn.classList.toggle('hidden', isShowMode);
+    });
+
+  // **Aquí** ocultamos TODO el contenedor deck-controls
+  document.querySelector('#instantColumn .deck-controls')
+    .classList.toggle('hidden', isShowMode);
   }
 
   // Ejecutar al arrancar para aplicar el estado inicial
