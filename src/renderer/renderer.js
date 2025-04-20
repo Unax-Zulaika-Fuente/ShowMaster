@@ -127,6 +127,7 @@
       ? 'Visualizar modo Edición'
       : 'Visualizar modo Espectáculo';
     updateViewMode();
+    updateLibraryUI();
   });
 
   function updateViewMode() {
@@ -142,6 +143,16 @@
     document
       .getElementById("removeSecondarySelected")
       .classList.toggle("hidden", isShowMode);
+    document.getElementById('overlayTypeColor').parentElement
+      .classList.toggle('hidden', isShowMode);
+    document.getElementById('overlayTypeImage').parentElement
+      .classList.toggle('hidden', isShowMode);
+    document.getElementById('colorControl')
+      .classList.toggle('hidden', isShowMode);
+    document.getElementById('imageControl')
+      .classList.toggle('hidden', isShowMode);
+    document.querySelector('.global-mute-toggle')
+      .classList.toggle('hidden', isShowMode);
     document
       .querySelectorAll("#instantColumn .deck-controls button")
       .forEach((btn) => {
@@ -431,6 +442,7 @@
       cb.type = 'checkbox';
       cb.className = 'secondary-mute-checkbox';
       cb.checked = !!secondaryMuteFlags[index];
+      cb.disabled = isShowMode;
       cb.addEventListener('change', () => {
         secondaryMuteFlags[index] = cb.checked;
       });
