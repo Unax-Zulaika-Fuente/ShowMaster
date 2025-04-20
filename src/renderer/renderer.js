@@ -1390,17 +1390,19 @@
   // Guarda el valor previo al mutear
   globalVolSlider.addEventListener('input', () => {
     instantGlobalVolume = parseFloat(globalVolSlider.value);
-    globalVolSlider.setAttribute('data-previous', instantGlobalVolume);
-    // ajusta icono
-    if (instantGlobalVolume === 0) {
-      instantVolumeIcon.classList.replace('fa-volume-high', 'fa-volume-mute');
-    } else {
-      instantVolumeIcon.classList.replace('fa-volume-mute', 'fa-volume-high');
-    }
-    // reajusta todos los sonidos en vuelo
+  
     instantAudioPlayers.forEach(a => {
-      const base = Math.pow(10, (a._entryVolumeDb||0) / 20);
-      a.volume = Math.min(Math.max(base * instantGlobalVolume, 0), 1);
+      const baseVol = Math.pow(10, (a._entryVolumeDb ?? 0) / 20);
+      a.volume = Math.min(Math.max(baseVol * instantGlobalVolume, 0), 1);
     });
+  
+    instantVolumeIcon.classList.remove('fa-volume-mute','fa-volume-low','fa-volume-high');
+    if (instantGlobalVolume === 0) {
+      instantVolumeIcon.classList.add('fa-volume-mute');
+    } else if (instantGlobalVolume < 0.5) {
+      instantVolumeIcon.classList.add('fa-volume-low');
+    } else {
+      instantVolumeIcon.classList.add('fa-volume-high');
+    }
   });
   
