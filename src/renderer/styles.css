@@ -216,6 +216,16 @@ html, body {
     width: 100px;
     opacity: 1;
   }
+
+  .instant-global-control {
+    padding-top: 10px;
+    /* border-top: 1px solid #ccc; */
+  }
+  
+  /* Si quieres un poco de margen */
+  .instant-global-control .volume-container {
+    margin-left: 10px;
+  }
   
   /* styles.css */
 .global-mute-toggle {

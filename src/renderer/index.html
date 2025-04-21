@@ -176,11 +176,29 @@
             <button id="emojiInstantToggle" title="Cambiar icono">
               <i class="fa-regular fa-face-smile"></i>
             </button>
-            <button id="stopAllInstant" title="Detener todos los instantáneos">
-              <i class="fa-solid fa-stop"></i>
-            </button>
           </div>
           <div id="instantDeck" class="instant-deck"></div>
+          <div class="playback-controls">
+            <div class="button-volume-row">
+              <div class="volume-container">
+                <div class="volume-control">
+                  <i id="instantVolumeIcon" class="fa-solid fa-volume-high volume-icon"></i>
+                  <input
+                    type="range"
+                    id="instantGlobalVolume"
+                    class="volume-slider"
+                    min="0" max="1" step="0.01"
+                    value="1"
+                  />
+                </div>
+              </div>
+              <div class="control-buttons">
+                <button id="stopAllInstant" title="Detener todos los instantáneos">
+                  <i class="fa-solid fa-stop"></i>
+                </button>
+              </div>
+            </div>
+          </div>             
         </div>
       </div>
     </div>
